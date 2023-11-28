@@ -1,3 +1,17 @@
+/*
+Les Champs-Elysées - Joe Dassin
+
+Je m'baladais sur l'avenue
+Le cœur ouvert a l'inconnu
+J'avais envie de dire bonjour
+A n'importe qui
+N'importe qui et ce fut toi
+Je t'ai dis n'importe quoi
+Il suffisait de te parler
+Pour t'apprivoiser
+...
+
+*/
 #include <iostream>
 #include <string>
 
@@ -21,6 +35,9 @@ Node* create(int number) {
 }
 
 int height(Node*& node) { //number to find the height and the root of the tree
+    if(node == nullptr) {
+        return 0;
+    }
     return node->height;
 }
 
@@ -31,36 +48,40 @@ int balanceFactor(Node* node) { //node to be analyzed
     return (height(node->left) - height(node->right));
 }
 
-void inOrder(Node* node) { //root
-    if(node != nullptr) {
-        cout << "[";
-        inOrder(node->left);
-        cout << node->number << " "; //TO-DO!!! adapt to the question output 
-        inOrder(node->right);
-        cout << "]";
-        cout << "\n";
+void inOrder(Node* node, int times, int a) { //root
+    if (node != nullptr) {
+        inOrder(node->left, times, a);
+        cout << node->number;
+        a++;
+        if (a != times) {
+            cout << ", ";
+        }
+        inOrder(node->right, times, a);
     }
 }
 
-void preOrder(Node* node) { //root
+
+void preOrder(Node* node, int times, int a) { //root
     if(node != nullptr) {
-        cout << "[";
-        cout << node->number << " "; //TO-DO!!! adapt to the question output
-        preOrder(node->left);
-        preOrder(node->right);
-        cout << "]";
-        cout << "\n";
+        cout << node->number; 
+        a++;
+        if(a != times) {
+            cout << ", ";
+        }
+        preOrder(node->left, times, a);
+        preOrder(node->right, times, a);
     }
 }
 
-void postOrder(Node* node) { //root
+void postOrder(Node* node, int times, int a) { //root
     if(node != nullptr) {
-        cout << "[";
-        postOrder(node->left);
-        postOrder(node->right);
-        cout << node->number << " "; //TO-DO!!! adapt to the question output 
-        cout << "]";
-        cout << "\n";
+        postOrder(node->left, times, a);
+        postOrder(node->right, times, a);
+        cout << node->number;
+        a++;
+        if(a != times) {
+            cout << ", ";
+        }
     }
 }
 
@@ -114,72 +135,104 @@ void balance(Node*& node, int number) {
     }
 }
 
-Node* insert(Node*& node, int number) { //root
-    Node* current = node;
-
-    while(current != nullptr) {
-        if(number < current->number) {
-            current = current->left;
-        }
-        else if(number > current->number) {
-            current = current->right;
-        }
-        else {
-            return node;
-        }
-    }
+Node* insert(Node*& node, int number, int& times) { //root
 
     Node* newNode = create(number);
 
-    node->height = max(height(node->left), height(node->right)) + 1;
+    if(node == nullptr) {
+        node = newNode;
+    }
+    else {
+        Node* current = node;
+        Node* parent = nullptr;
 
-    balance(node, number);
+        while(current != nullptr) {
+            parent = current;
+            if(number < current->number) {
+                current = current->left;
+            }
+            else if(number > current->number) {
+                current = current -> right;
+            }
+            else {
+                return node; //analyze when the number already exists
+            }
+        }
 
+        if(number < parent->number) {
+            parent->left = newNode;
+        }
+        else if(number > parent->number) {
+            parent->right = newNode;
+        }
+        else {
+            return node; //analyze when the number already exists
+        }
+
+        node->height = max(height(node->left), height(node->right)) + 1;
+
+        balance(node, number);
+    }
+    times++;
     return node;
 }
 
 Node* minValue(Node* node) {
-    while(node->left != nullptr) {
-        node = node->left;
+    Node* current = node;
+
+    while(current->left != nullptr) {
+        current = current->left;
     }
-    return node;
+    return current;
 }
 
-Node* remove(Node*& node, int number) { //root and number to be removed
-    if(node == nullptr) {
+Node* remove(Node* node, int number, int& times) {
+    if (node == nullptr) {
         return node;
     }
 
-    while(node->number != number) {
-        if(number < node->number) {
-            node = node->left;
+    if (number < node->number) {
+        node->left = remove(node->left, number, times);
+    } else if (number > node->number) {
+        node->right = remove(node->right, number, times);
+    } else {
+        if (node->left == nullptr || node->right == nullptr) {
+            Node* temp = nullptr;
+            if (node->left) {
+                temp = node->left;
+            } else {
+                temp = node->right;
+            }
+
+            if (temp == nullptr) {
+                temp = node;
+                node = nullptr;
+            } else {
+                *node = *temp;
+                delete temp;
+            }
+        } else {
+            Node* temp = minValue(node->right);
+            node->number = temp->number;
+            node->right = remove(node->right, temp->number, times);
         }
-        else {
-            node = node->right;
-        }
-    }
-    //node with one or no child
-    if(node->left == nullptr) {
-        Node* temp = node->right;
-        delete node;
-        balance(temp, number);
-        return temp;
-    }
-    else if(node->right == nullptr) {
-        Node* temp = node->left;
-        delete node;
-        balance(temp, number);
-        return temp;
     }
 
-    //node with 2 children
-    Node* temp = minValue(node->right);
-    node->number = temp->number;
-    node->right = remove(node->right, temp->number);
+    if (node == nullptr) {
+        return node;
+    }
+
+    node->height = max(height(node->left), height(node->right)) + 1;
+
+    balance(node, number);
+    times--;
+    return node;
 }
+
 
 int main() {
     Node* tree = nullptr; //root
+    int times = 0;
 
     while(true) {
         string command;
@@ -192,26 +245,32 @@ int main() {
                 int num;
                 cin >> num;
                 if(command == "ADICIONA") {
-                    insert(tree, num);
+                    insert(tree, num, times);
                 }
                 else if(command == "REMOVE") {
-                    remove(tree, num);
+                    remove(tree, num, times);
                 }
                 else {
-                    cout << height(tree);
+                    cout << "Nivel de " << num << ": " << height(tree) << "\n";
                 }
             }
             else {
                 string type;
                 cin >> type;
                 if(type == "PREORDEM") {
-                    preOrder(tree);
+                    cout << "[";
+                    preOrder(tree, times, 0);
+                    cout << "]" << "\n";
                 }
                 else if(type == "EMORDEM") {
-                    inOrder(tree);
+                    cout << "[";
+                    inOrder(tree, times, 0);
+                    cout << "]" << "\n";
                 }
                 else {
-                    postOrder(tree);
+                    cout << "[";
+                    postOrder(tree, times, 0);
+                    cout << "]" << "\n";
                 }
             }
         }
