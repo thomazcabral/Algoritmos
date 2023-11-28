@@ -9,6 +9,8 @@ N'importe qui et ce fut toi
 Je t'ai dis n'importe quoi
 Il suffisait de te parler
 Pour t'apprivoiser
+Aux Champs-Elysées
+Aux Champs-Elysées
 ...
 
 */
@@ -229,6 +231,22 @@ Node* remove(Node* node, int number, int& times) {
     return node;
 }
 
+bool search(Node* node, int number) {
+    Node* current = node;
+    while(current != nullptr && current->number != number) {
+        if(number < node->number) {
+            current = current->left;
+        }
+        else {
+            current = current->right;
+        }
+    }
+    if(current == nullptr) {
+        return false;
+    }
+    return true;
+}
+
 
 int main() {
     Node* tree = nullptr; //root
@@ -248,10 +266,20 @@ int main() {
                     insert(tree, num, times);
                 }
                 else if(command == "REMOVE") {
-                    remove(tree, num, times);
+                    if(search(tree, num)) {
+                        remove(tree, num, times);
+                    }
+                    else {
+                        cout << "Valor " << num << " inexistente" << "\n";
+                    }
                 }
                 else {
-                    cout << "Nivel de " << num << ": " << height(tree) << "\n";
+                    if(search(tree, num)) {
+                        cout << "Nivel de " << num << ": " << height(tree) << "\n";
+                    }
+                    else {
+                        cout << "Valor " << num << " inexistente" << "\n";
+                    }
                 }
             }
             else {
