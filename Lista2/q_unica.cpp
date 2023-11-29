@@ -53,11 +53,11 @@ int balanceFactor(Node* node) { //node to be analyzed
 void inOrder(Node* node, int times, int a) { //root
     if (node != nullptr) {
         inOrder(node->left, times, a);
-        cout << node->number;
-        a++;
+        cout << node->number << " ";
+        /*a++;
         if (a != times) {
             cout << ", ";
-        }
+        }*/
         inOrder(node->right, times, a);
     }
 }
@@ -65,11 +65,11 @@ void inOrder(Node* node, int times, int a) { //root
 
 void preOrder(Node* node, int times, int a) { //root
     if(node != nullptr) {
-        cout << node->number; 
-        a++;
+        cout << node->number << " "; 
+        /*a++;
         if(a != times) {
             cout << ", ";
-        }
+        }*/
         preOrder(node->left, times, a);
         preOrder(node->right, times, a);
     }
@@ -79,17 +79,17 @@ void postOrder(Node* node, int times, int a) { //root
     if(node != nullptr) {
         postOrder(node->left, times, a);
         postOrder(node->right, times, a);
-        cout << node->number;
-        a++;
+        cout << node->number << " ";
+        /*a++;
         if(a != times) {
             cout << ", ";
-        }
+        }*/
     }
 }
 
 Node* rotateLeft(Node*& node) {
-    Node* node2 = node->left;
-    Node* node3 = node->right;
+    Node* node2 = node->right;
+    Node* node3 = node->left;
 
     node2->left = node;
     node->right = node3;
@@ -101,8 +101,8 @@ Node* rotateLeft(Node*& node) {
 }
 
 Node* rotateRight(Node*& node) {
-    Node* node2 = node->right;
-    Node* node3 = node->left;
+    Node* node2 = node->left;
+    Node* node3 = node->right;
 
     node2->right = node;
     node->left = node3;
@@ -113,28 +113,29 @@ Node* rotateRight(Node*& node) {
     return node2;
 }
 
-void balance(Node*& node, int number) { 
-    int bal = balanceFactor(node);
+Node* balance(Node*& node, int number) { 
+    node->height = max(height(node->left), height(node->right)) + 1;
 
-    if(bal > 1) { //left imbalance
-        if(number < node->left->number) {
-            node = rotateRight(node); //simple rotation to the right
-        }
-        else {
+    int fb = balanceFactor(node);
+
+    if (fb > 1) {
+        if (number < node->left->number) {
+            return rotateRight(node);
+        } else {
             node->left = rotateLeft(node->left);
-            node = rotateRight(node); //double rotation to the right
+            return rotateRight(node);
         }
     }
 
-    if(bal < -1) { //right imbalance
-        if(number > node->right->number) {
-            node = rotateLeft(node); //simple rotation to the left
-        }
-        else {
+    if (fb < -1) {
+        if (number > node->right->number) {
+            return rotateLeft(node);
+        } else {
             node->right = rotateRight(node->right);
-            node = rotateLeft(node); //double rotation to the left
+            return rotateLeft(node);
         }
     }
+    return node;
 }
 
 Node* insert(Node*& node, int number, int& times) { //root
@@ -168,15 +169,14 @@ Node* insert(Node*& node, int number, int& times) { //root
             parent->right = newNode;
         }
         else {
+            times++;
             return node; //analyze when the number already exists
         }
-
         node->height = max(height(node->left), height(node->right)) + 1;
 
-        balance(node, number);
-    }
     times++;
-    return node;
+    return balance(node, number);
+	}
 }
 
 Node* minValue(Node* node) {
@@ -199,36 +199,34 @@ Node* remove(Node* node, int number, int& times) {
         node->right = remove(node->right, number, times);
     } else {
         if (node->left == nullptr || node->right == nullptr) {
-            Node* temp = nullptr;
+            Node* v = nullptr;
             if (node->left) {
-                temp = node->left;
+                v = node->left;
             } else {
-                temp = node->right;
+                v = node->right;
             }
 
-            if (temp == nullptr) {
-                temp = node;
+            if (v == nullptr) {
+                v = node;
                 node = nullptr;
             } else {
-                *node = *temp;
-                delete temp;
+                *node = *v;
             }
         } else {
-            Node* temp = minValue(node->right);
-            node->number = temp->number;
-            node->right = remove(node->right, temp->number, times);
+            Node* v = minValue(node->right);
+            node->number = v->number;
+            node->right = remove(node->right, v->number, times);
         }
     }
 
     if (node == nullptr) {
+        times--;
         return node;
     }
-
+    
     node->height = max(height(node->left), height(node->right)) + 1;
-
-    balance(node, number);
     times--;
-    return node;
+    return balance(node, number);
 }
 
 bool search(Node* node, int number) {
@@ -245,6 +243,24 @@ bool search(Node* node, int number) {
         return false;
     }
     return true;
+}
+
+int printHeight(Node* node, int num) {
+    Node* current = node;
+    int height = 0;
+    while(current != nullptr && current->number != num) {
+        height++;
+        if(num < current->number) {
+            current = current->left;
+        }
+        else {
+            current = current->right;
+        }
+    }
+    if(current == nullptr) {
+        return 0;
+    }
+    return height;
 }
 
 
@@ -275,7 +291,7 @@ int main() {
                 }
                 else {
                     if(search(tree, num)) {
-                        cout << "Nivel de " << num << ": " << height(tree) << "\n";
+                        cout << "Nivel de " << num << ": " << printHeight(tree, num) << "\n";
                     }
                     else {
                         cout << "Valor " << num << " inexistente" << "\n";
