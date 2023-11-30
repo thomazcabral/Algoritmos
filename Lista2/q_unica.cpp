@@ -7,7 +7,7 @@ struct Node {
     int number;
     Node* left;
     Node* right;
-    Node* parent; // Parent pointer
+    Node* parent; 
     int height;
 };
 
@@ -158,7 +158,7 @@ void balance(Node*& root, Node* node) {
             rotateLeft(root, node);
         }
 
-        node = node->parent; // Move up the tree
+        node = node->parent; 
     }
 }
 
@@ -190,28 +190,54 @@ void insert(Node*& root, int number, int& times) { //root, node with the number(
 }
 
 void remove(Node*& root, Node* node, int& times) { //same thing as insert
-    if(node->left == nullptr) {
-        transplant(root, node, node->right);
-        balance(root, node->right);
+    if(node == nullptr) {
+        return;
     }
-    else if(node->right == nullptr) {
-        transplant(root, node, node->left);
-        balance(root, node->left);
+
+    Node* parent = node->parent;
+    if(node->left == nullptr && node->right == nullptr) {
+        if(parent == nullptr) {
+            root = nullptr;
+        }
+        else if(parent->left == node) {
+            parent->left = nullptr;
+        }
+        else {
+            parent->right = nullptr;
+        }
+        delete node;
+    }
+    else if(node->left == nullptr || node->right == nullptr) {
+        Node* child;
+
+        if(node->left != nullptr) {
+            child = node->left;
+        }
+        else {
+            child = node->right;
+        }
+
+        if(parent == nullptr) {
+            root = child;
+            root->parent = nullptr;
+        }
+        else {
+            if(parent->left == node) {
+                parent->left = child;
+            }
+            else {
+                parent->right = child;
+            }
+            child->parent = parent;
+        }
+        delete node;
     }
     else {
-        Node* y = min(node->right);
-        if(y != node->right) {
-            transplant(root, node, node->right);
-            y->right = node->right;
-            y->right->parent = y;
-            balance(root, y->right);
-        }
-        transplant(root, node, y);
-        y->left = node->left;
-        y->left->parent = y;
-        balance(root, y->left);
+        Node* successorNode = successor(node);
+        node->number = successorNode->number;
+        remove(root, successorNode, times);
     }
-    delete node;
+    balance(root, parent);
     times--;
 }
 
