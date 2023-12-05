@@ -49,22 +49,6 @@ void updateHeight(Node* node) {
     node->height = 1 + max(height(node->left), height(node->right));
 }
 
-void transplant(Node*& root, Node* u, Node* v) {
-    if(u->parent == nullptr) {
-        root = v;
-    }
-    else if(u == u->parent->left) {
-        u->parent->left = v;
-    }
-    else {
-        u->parent->right = v;
-    }
-
-    if(v != nullptr) {
-        v->parent = u->parent;
-    }
-}
-
 Node* min(Node* node) {
     if(node->left != nullptr) {
         return min(node->left);
@@ -162,7 +146,7 @@ void balance(Node*& root, Node* node) {
     }
 }
 
-void insert(Node*& root, int number, int& times) { //root, node with the number(search)
+void insert(Node*& root, int number) { //root, node with the number(search)
     Node* node = createNode(number);
     Node* x = root;
     Node* y = nullptr;
@@ -186,10 +170,9 @@ void insert(Node*& root, int number, int& times) { //root, node with the number(
         y->right = node;
     }
     balance(root, node);
-    times++;
 }
 
-void remove(Node*& root, Node* node, int& times) { //same thing as insert
+void remove(Node*& root, Node* node) { //same thing as insert
     if(node == nullptr) {
         return;
     }
@@ -235,10 +218,9 @@ void remove(Node*& root, Node* node, int& times) { //same thing as insert
     else {
         Node* successorNode = successor(node);
         node->number = successorNode->number;
-        remove(root, successorNode, times);
+        remove(root, successorNode);
     }
     balance(root, parent);
-    times--;
 }
 
 void inOrder(Node* node, bool& first) { //root
@@ -295,7 +277,6 @@ int displayHeight(Node* root, Node* node) {
 
 int main() {
     Node* tree = nullptr;
-    int times = 0;
     while(true) {
         string command;
         cin >> command;
@@ -309,13 +290,13 @@ int main() {
                 if(command == "ADICIONA") {
                     Node* node = search(tree, num);
                     if(node == nullptr) {
-                        insert(tree, num, times);
+                        insert(tree, num);
                     }
                 }
                 else if(command == "REMOVE") {
                     Node* node = search(tree, num);
                     if(node != nullptr) {
-                        remove(tree, node, times);
+                        remove(tree, node);
                     }
                     else {
                         cout << "Valor " << num << " inexistente" << "\n";
