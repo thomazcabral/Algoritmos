@@ -23,7 +23,7 @@ void maxHeapify(int array[], int size, int root) {
 }
 
 void buildHeap(int array[], int size) {
-	int startIndex = 0;
+    int startIndex = 0;
     if(size % 2 == 0) {
         startIndex = size / 2;
     }
