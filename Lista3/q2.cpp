@@ -89,7 +89,7 @@ void insertTheater(Theater* theater, string name, int registration, int priority
         }
         if(person->priority < current->next->priority) {
             cout << person->name << (person->registration) << "nao foi alocado(a) em nenhuma fileira" << "\n";
-            insertQueue(queue, person);
+            insertQueue(&queue, person);
         }
         else if(person->priority > current->next->priority) {
             person->next = current->next->next;
@@ -102,7 +102,7 @@ void insertTheater(Theater* theater, string name, int registration, int priority
             }
             else {
                 cout << person->name << '(' << person->registration << ')' << "nao foi alocado(a) em nenhuma fileira" << "\n";
-                insertQueue(queue, person); 
+                insertQueue(&queue, person); 
             }
         }
     }
