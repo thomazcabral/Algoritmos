@@ -157,3 +157,47 @@ void removeTheater(Theater* theater, int registration, Queue* queue) {
     }
 }
 
+void situationTheater(Theater* theater, int registration, Queue* queue) {
+    int initialIndex = 0;
+    bool removed = false;
+
+    while(initialIndex < theater->lines && !removed) {
+        int seat = 0;
+        Person* current = theater->table[initialIndex];
+        while(seat < theater->seatsPerLine && !removed) {
+            if(current->registration == registration && seat == 0) {
+                cout << "Sentado(a) na fileira " << initialIndex + 1 << "\n";
+            }
+            else {
+                if(current->next->registration == registration) {
+                    cout << "Sentado(a) na fileira " << initialIndex + 1 << "\n";
+                }
+                else {
+                    current = current->next;
+                }
+            }
+            seat++;
+        }
+        initialIndex++;
+    }
+    
+    if(!removed) {
+        Person* current = queue->head;
+        int i = 0;
+        if(current->registration == registration && i == 0) {
+            cout << "Sem assento" << "\n";
+        }
+        else {
+            if(current->next->registration == registration) {
+                cout << "Sem assento" << "\n";
+            }
+            else {
+                current = current->next;
+            }
+        }
+    }
+
+    if(!removed) {
+        cout << "Inexistente" << "\n";
+    }
+}
