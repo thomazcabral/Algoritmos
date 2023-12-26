@@ -88,17 +88,20 @@ void insertTheater(Theater* theater, string name, int registration, int priority
             current = current->next;
         }
         if(person->priority < current->next->priority) {
-            cout << person->name << (person->registration) << "nao foi alocado(a) em nenhuma fileira" << "\n";
+            cout << person->name << '(' << person->registration << ')' << "nao foi alocado(a) em nenhuma fileira" << "\n";
             insertQueue(&queue, person);
         }
         else if(person->priority > current->next->priority) {
             person->next = current->next->next;
             current->next = person;
+            cout << person->name << '(' << person->registration << ')' << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
+
         }
         else {
             if(person->registration < current->next->registration) {
                 person->next = current->next->next;
                 current->next = person;
+                cout << person->name << '(' << person->registration << ')' << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
             }
             else {
                 cout << person->name << '(' << person->registration << ')' << "nao foi alocado(a) em nenhuma fileira" << "\n";
@@ -234,6 +237,7 @@ int main() {
             cin >> priority;
 
             insertTheater(theater, name, registrationNumber, priority, queue);
+            registrationNumber++;
         }
         else if(command == "REM") {
             string name;
