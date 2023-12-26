@@ -122,11 +122,13 @@ void removeTheater(Theater* theater, int registration, Queue* queue) {
             if(current->registration == registration && seat == 0) {
                 theater->table[initialIndex] = current->next;
                 cout << "Removido(a)" << "\n";
+                removed = true;
             }
             else {
                 if(current->next->registration == registration) {
                     current->next = current->next->next;
                     cout << "Removido(a)" << "\n";
+                    removed = true;
                 }
                 else {
                     current = current->next;
@@ -143,11 +145,13 @@ void removeTheater(Theater* theater, int registration, Queue* queue) {
         if(current->registration == registration && i == 0) {
             queue->head = current->next;
             cout << "Removido(a)" << "\n";
+            removed = true;
         }
         else {
             if(current->next->registration == registration) {
                 current->next = current->next->next;
                 cout << "Removido(a)" << "\n";
+                removed = true;
             }
             else {
                 current = current->next;
@@ -162,21 +166,25 @@ void removeTheater(Theater* theater, int registration, Queue* queue) {
 
 void situationTheater(Theater* theater, int registration, Queue* queue) {
     int initialIndex = 0;
-    bool removed = false;
+    bool situation = false;
 
-    while(initialIndex < theater->lines && !removed) {
+    while(initialIndex < theater->lines && !situation) {
         int seat = 0;
         Person* current = theater->table[initialIndex];
-        while(seat < theater->seatsPerLine && !removed) {
+        while(current != nullptr && seat < theater->seatsPerLine && !situation) {
             if(current->registration == registration && seat == 0) {
                 cout << "Sentado(a) na fileira " << initialIndex + 1 << "\n";
+                situation = true;
             }
             else {
-                if(current->next->registration == registration) {
+                if(current->next != nullptr && current->next->registration == registration) {
                     cout << "Sentado(a) na fileira " << initialIndex + 1 << "\n";
+                    situation = true;
                 }
                 else {
-                    current = current->next;
+                    if(current->next != nullptr) {
+                        current = current->next;
+                    }
                 }
             }
             seat++;
@@ -184,23 +192,29 @@ void situationTheater(Theater* theater, int registration, Queue* queue) {
         initialIndex++;
     }
     
-    if(!removed) {
-        Person* current = queue->head;
-        int i = 0;
-        if(current->registration == registration && i == 0) {
-            cout << "Sem assento" << "\n";
-        }
-        else {
-            if(current->next->registration == registration) {
-                cout << "Sem assento" << "\n";
-            }
-            else {
-                current = current->next;
+    if(!situation) {
+        if(queue != nullptr) {
+            Person* current = queue->head;
+            int i = 0;
+            if(current != nullptr && current->next != nullptr) {
+                if(current->registration == registration && i == 0) {
+                    cout << "Sem assento" << "\n";
+                    situation = true;
+                }
+                else {
+                    if(current->next->registration == registration) {
+                        cout << "Sem assento" << "\n";
+                        situation = true;
+                    }
+                    else {
+                        current = current->next;
+                    }
+                }
             }
         }
     }
 
-    if(!removed) {
+    if(!situation) {
         cout << "Inexistente" << "\n";
     }
 }
