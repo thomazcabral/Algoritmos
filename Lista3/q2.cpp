@@ -29,12 +29,17 @@ Queue* createQueue(Person* person) {
     return newNode;
 }
 
-void insertQueue(Queue* queue, Person* person) {
-    Queue* current = queue;
-    while(current->next != nullptr) {
-        current = current->next;
+void insertQueue(Queue** queue, Person* person) {
+    Node* newNode = createQueue(person);
+    if (*queue == nullptr) {
+        *queue = newNode;
+    } else {
+        Queue* current = *queue;
+        while(current->next != nullptr) {
+            current = current->next;
+        }
+        current->next = newNode;
     }
-    current->next = createQueue(person);
 }
 
 Person* createPerson(string name, int registration, int priority) {
@@ -55,10 +60,10 @@ void insertTheater(Theater* theater, string name, int registration, int priority
     int worstIndex = 0;
     bool seated = false;
 
-    while(initialIndex < theater->lines and !seated) {
+    while(initialIndex < theater->lines && !seated) {
         int seat = 0;
         Person* current = theater->table[initialIndex];
-        while(seat < theater->seatsPerLine and !seated) {
+        while(seat < theater->seatsPerLine && !seated) {
             if(current == nullptr) {
                 person->next = theater->table[initialIndex];
                 theater->table[initialIndex] = person;
@@ -102,3 +107,53 @@ void insertTheater(Theater* theater, string name, int registration, int priority
         }
     }
 }
+
+void removeTheater(Theater* theater, int registration, Queue* queue) {
+    int initialIndex = 0;
+    bool removed = false;
+
+    while(initialIndex < theater->lines && !removed) {
+        int seat = 0;
+        Person* current = theater->table[initialIndex];
+        while(seat < theater->seatsPerLine && !removed) {
+            if(current->registration == registration && seat == 0) {
+                theater->table[initialIndex] = current->next;
+                cout << "Removido(a)" << "\n";
+            }
+            else {
+                if(current->next->registration == registration) {
+                    current->next = current->next->next;
+                    cout << "Removido(a)" << "\n";
+                }
+                else {
+                    current = current->next;
+                }
+            }
+            seat++;
+        }
+        initialIndex++;
+    }
+    
+    if(!removed) {
+        Person* current = queue->head;
+        int i = 0;
+        if(current->registration == registration && i == 0) {
+            queue->head = current->next;
+            cout << "Removido(a)" << "\n";
+        }
+        else {
+            if(current->next->registration == registration) {
+                current->next = current->next->next;
+                cout << "Removido(a)" << "\n";
+            }
+            else {
+                current = current->next;
+            }
+        }
+    }
+
+    if(!removed) {
+        cout << "Inexistente" << "\n";
+    }
+}
+
