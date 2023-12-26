@@ -68,7 +68,7 @@ void insertTheater(Theater* theater, string name, int registration, int priority
                 person->next = theater->table[initialIndex];
                 theater->table[initialIndex] = person;
                 seated = true;
-                cout << person->name << '(' << person->registration << ')' << "foi alocado(a) na fileira " << initialIndex + 1 << "\n";
+                cout << person->name << " (" << person->registration << ") " << "foi alocado(a) na fileira " << initialIndex + 1 << "\n";
             }
             else {
                 if(current->priority < worstPriority) { // if there are more than 1 person with the worst priority, issues will occur
@@ -88,23 +88,23 @@ void insertTheater(Theater* theater, string name, int registration, int priority
             current = current->next;
         }
         if(person->priority < current->next->priority) {
-            cout << person->name << '(' << person->registration << ')' << "nao foi alocado(a) em nenhuma fileira" << "\n";
+            cout << person->name << " (" << person->registration << ") " << "nao foi alocado(a) em nenhuma fileira" << "\n";
             insertQueue(&queue, person);
         }
         else if(person->priority > current->next->priority) {
             person->next = current->next->next;
             current->next = person;
-            cout << person->name << '(' << person->registration << ')' << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
+            cout << person->name << " (" << person->registration << ") " << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
 
         }
         else {
             if(person->registration < current->next->registration) {
                 person->next = current->next->next;
                 current->next = person;
-                cout << person->name << '(' << person->registration << ')' << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
+                cout << person->name << " (" << person->registration << ") " << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
             }
             else {
-                cout << person->name << '(' << person->registration << ')' << "nao foi alocado(a) em nenhuma fileira" << "\n";
+                cout << person->name << " (" << person->registration << ") " << "nao foi alocado(a) em nenhuma fileira" << "\n";
                 insertQueue(&queue, person); 
             }
         }
