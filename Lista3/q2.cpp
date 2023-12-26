@@ -8,37 +8,37 @@ struct Person { //hashNode
     int registration;
     int priority;
     Person* next;
-}
+};
 
 struct Theater { //hashTable
     Person** table;
     int lines;
     int seatsPerLine;
-}
+};
 
 struct Queue {
     Person* head;
     Queue* next;
-}
+};
 
 Queue* createQueue(Person* person) {
-    Node* newNode = new Node;
-    newNode->person = person;
-    newNode->next = nullptr;
+    Queue* newQueue = new Queue;
+    newQueue->head = person;
+    newQueue->next = nullptr;
 
-    return newNode;
+    return newQueue;
 }
 
 void insertQueue(Queue** queue, Person* person) {
-    Node* newNode = createQueue(person);
+    Queue* newQueue = createQueue(person);
     if (*queue == nullptr) {
-        *queue = newNode;
+        *queue = newQueue;
     } else {
         Queue* current = *queue;
         while(current->next != nullptr) {
             current = current->next;
         }
-        current->next = newNode;
+        current->next = newQueue;
     }
 }
 
@@ -200,4 +200,59 @@ void situationTheater(Theater* theater, int registration, Queue* queue) {
     if(!removed) {
         cout << "Inexistente" << "\n";
     }
+}
+
+int main() {
+    int lines, seatsPerLine;
+    cin >> lines >> seatsPerLine;
+
+    Theater* theater = new Theater;
+    theater->lines = lines;
+    theater->seatsPerLine = seatsPerLine;
+    theater->table = new Person*[lines];
+
+    for(int i = 0; i < lines; i++) {
+        theater->table[i] = nullptr;
+    }
+
+    Queue* queue = nullptr;
+
+    int numCommands;
+    cin >> numCommands;
+
+    int registrationNumber = 1;
+
+    for(int i = 0; i < numCommands; i++) {
+        string command;
+        cin >> command;
+
+        if(command == "CAD") {
+            string name;
+            cin >> name;
+
+            int priority;
+            cin >> priority;
+
+            insertTheater(theater, name, registrationNumber, priority, queue);
+        }
+        else if(command == "REM") {
+            string name;
+            cin >> name;
+
+            int registration;
+            cin >> registration;
+
+            removeTheater(theater, registration, queue);
+        }
+        else if(command == "VER") {
+            string name;
+            cin >> name;
+
+            int registration;
+            cin >> registration;
+
+            situationTheater(theater, registration, queue);
+        }
+    }
+    return 0;
 }
