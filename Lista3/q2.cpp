@@ -3,274 +3,131 @@
 
 using namespace std;
 
-struct Person { //hashNode
+struct People {
     string name;
     int registration;
     int priority;
-    Person* next;
 };
 
-struct Theater { //hashTable
-    Person** table;
-    int lines;
-    int seatsPerLine;
+struct ValuePair {
+    People* person;
+    int index;
 };
 
-struct Queue {
-    Person* head;
-    Queue* next;
-};
-
-Queue* createQueue(Person* person) {
-    Queue* newQueue = new Queue;
-    newQueue->head = person;
-    newQueue->next = nullptr;
-
-    return newQueue;
+void swap(People*& a, People*& b) {
+    People* temp = a;
+    a = b;
+    b = temp;
 }
 
-void insertQueue(Queue** queue, Person* person) {
-    Queue* newQueue = createQueue(person);
-    if (*queue == nullptr) {
-        *queue = newQueue;
-    } else {
-        Queue* current = *queue;
-        while(current->next != nullptr) {
-            current = current->next;
-        }
-        current->next = newQueue;
-    }
-}
-
-Person* createPerson(string name, int registration, int priority) {
-    Person* newPerson = new Person;
-    newPerson->name = name;
-    newPerson->registration = registration;
-    newPerson->priority = priority;
-    newPerson->next = nullptr;
-
-    return newPerson;
-}
-
-void insertTheater(Theater* theater, string name, int registration, int priority, Queue* queue) {
-    Person* person = createPerson(name, registration, priority);
-
-    int initialIndex = 0;
-    int worstPriority = 100000000; //big value
-    int worstIndex = 0;
-    bool seated = false;
-
-    while(initialIndex < theater->lines && !seated) {
-        int seat = 0;
-        Person* current = theater->table[initialIndex];
-        while(seat < theater->seatsPerLine && !seated) {
-            if(current == nullptr) {
-                person->next = theater->table[initialIndex];
-                theater->table[initialIndex] = person;
-                seated = true;
-                cout << person->name << " (" << person->registration << ") " << "foi alocado(a) na fileira " << initialIndex + 1 << "\n";
-            }
-            else {
-                if(current->priority < worstPriority) { // if there are more than 1 person with the worst priority, issues will occur
-                    worstPriority = current->priority;
-                    worstIndex = initialIndex;
-                }
-                current = current->next;
-            }
-            seat++;
-        }
-        initialIndex++;
-    }
-    
-    if(!seated) {
-        Person* current = theater->table[worstIndex];
-        while(current->next->priority != worstPriority) {
-            current = current->next;
-        }
-        if(person->priority < current->next->priority) {
-            cout << person->name << " (" << person->registration << ") " << "nao foi alocado(a) em nenhuma fileira" << "\n";
-            insertQueue(&queue, person);
-        }
-        else if(person->priority > current->next->priority) {
-            person->next = current->next->next;
-            current->next = person;
-            cout << person->name << " (" << person->registration << ") " << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
-
-        }
-        else {
-            if(person->registration < current->next->registration) {
-                person->next = current->next->next;
-                current->next = person;
-                cout << person->name << " (" << person->registration << ") " << "foi alocado(a) na fileira " << worstIndex + 1 << "\n";
-            }
-            else {
-                cout << person->name << " (" << person->registration << ") " << "nao foi alocado(a) em nenhuma fileira" << "\n";
-                insertQueue(&queue, person); 
-            }
+/*void initializeHashTable(ValuePair hashtable[][], int rows, int seatsPerRow) {
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < seatsPerRow; j++) {
+            hashtable[i][j].value = -1;
+            hashtable[i][j].index = i + 1;
         }
     }
 }
+*/
+// MAX HEAP
 
-void removeTheater(Theater* theater, int registration, Queue* queue) {
-    int initialIndex = 0;
-    bool removed = false;
+void maxHeapify(People* array[], int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
 
-    while(initialIndex < theater->lines && !removed) {
-        int seat = 0;
-        Person* current = theater->table[initialIndex];
-        while(seat < theater->seatsPerLine && !removed) {
-            if(current->registration == registration && seat == 0) {
-                theater->table[initialIndex] = current->next;
-                cout << "Removido(a)" << "\n";
-                removed = true;
-            }
-            else {
-                if(current->next->registration == registration) {
-                    current->next = current->next->next;
-                    cout << "Removido(a)" << "\n";
-                    removed = true;
-                }
-                else {
-                    current = current->next;
-                }
-            }
-            seat++;
-        }
-        initialIndex++;
-    }
-    
-    if(!removed) {
-        Person* current = queue->head;
-        int i = 0;
-        if(current->registration == registration && i == 0) {
-            queue->head = current->next;
-            cout << "Removido(a)" << "\n";
-            removed = true;
-        }
-        else {
-            if(current->next->registration == registration) {
-                current->next = current->next->next;
-                cout << "Removido(a)" << "\n";
-                removed = true;
-            }
-            else {
-                current = current->next;
-            }
-        }
+    if(left < n && array[left]->priority > array[largest]->priority) {
+        largest = left;
     }
 
-    if(!removed) {
-        cout << "Inexistente" << "\n";
+    if(right < n && array[right]->priority > array[largest]->priority) {
+        largest = right;
+    }
+
+    if(largest != i) {
+        swap(array[i], array[largest]);
+        maxHeapify(array, n, largest);
     }
 }
 
-void situationTheater(Theater* theater, int registration, Queue* queue) {
-    int initialIndex = 0;
-    bool situation = false;
-
-    while(initialIndex < theater->lines && !situation) {
-        int seat = 0;
-        Person* current = theater->table[initialIndex];
-        while(current != nullptr && seat < theater->seatsPerLine && !situation) {
-            if(current->registration == registration && seat == 0) {
-                cout << "Sentado(a) na fileira " << initialIndex + 1 << "\n";
-                situation = true;
-            }
-            else {
-                if(current->next != nullptr && current->next->registration == registration) {
-                    cout << "Sentado(a) na fileira " << initialIndex + 1 << "\n";
-                    situation = true;
-                }
-                else {
-                    if(current->next != nullptr) {
-                        current = current->next;
-                    }
-                }
-            }
-            seat++;
-        }
-        initialIndex++;
+void buildMaxHeap(People* array[], int n) {
+    for(int i = n / 2 - 1; i >= 0; i--) {
+        maxHeapify(array, n, i);
     }
-    
-    if(!situation) {
-        if(queue != nullptr) {
-            Person* current = queue->head;
-            int i = 0;
-            if(current != nullptr && current->next != nullptr) {
-                if(current->registration == registration && i == 0) {
-                    cout << "Sem assento" << "\n";
-                    situation = true;
-                }
-                else {
-                    if(current->next->registration == registration) {
-                        cout << "Sem assento" << "\n";
-                        situation = true;
-                    }
-                    else {
-                        current = current->next;
-                    }
-                }
-            }
-        }
+}
+
+void insertMaxHeap(People* array[], int& n, People* person) {
+    n++;
+    int i = n - 1;
+    array[i] = person;
+
+    while(i > 0 && array[(i - 1) / 2]->priority < array[i]->priority) {
+        swap(array[i], array[(i - 1) / 2]);
+        i = (i - 1) / 2;
+    }
+}
+
+People* removeMaxHeap(People* array[], int& n) {
+    People* root = array[0];
+    array[0] = array[n - 1];
+    n--;
+
+    maxHeapify(array, n, 0);
+
+    return root;
+}
+
+// MIN HEAP
+
+void minHeapify(People* array[], int n, int i) {
+    int smallest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if(left < n && array[left]->priority < array[smallest]->priority) {
+        smallest = left;
     }
 
-    if(!situation) {
-        cout << "Inexistente" << "\n";
+    if(right < n && array[right]->priority < array[smallest]->priority) {
+        smallest = right;
     }
+
+    if(smallest != i) {
+        swap(array[i], array[smallest]);
+        minHeapify(array, n, smallest);
+    }
+}
+
+void buildMinHeap(People* array[], int n) {
+    for(int i = n / 2 - 1; i >= 0; i--) {
+        minHeapify(array, n, i);
+    }
+}
+
+void insertMinHeap(People* array[], int& n, People* person) {
+    n++;
+    int i = n - 1;
+    array[i] = person;
+
+    while(i > 0 && array[(i - 1) / 2]->priority > array[i]->priority) {
+        swap(array[i], array[(i - 1) / 2]);
+        i = (i - 1) / 2;
+    }
+}
+
+People* removeMinHeap(People* array[], int& n) {
+    People* root = array[0];
+    array[0] = array[n - 1];
+    n--;
+
+    minHeapify(array, n, 0);
+
+    return root;
 }
 
 int main() {
-    int lines, seatsPerLine;
-    cin >> lines >> seatsPerLine;
-
-    Theater* theater = new Theater;
-    theater->lines = lines;
-    theater->seatsPerLine = seatsPerLine;
-    theater->table = new Person*[lines];
-
-    for(int i = 0; i < lines; i++) {
-        theater->table[i] = nullptr;
-    }
-
-    Queue* queue = nullptr;
-
-    int numCommands;
-    cin >> numCommands;
-
-    int registrationNumber = 1;
-
-    for(int i = 0; i < numCommands; i++) {
-        string command;
-        cin >> command;
-
-        if(command == "CAD") {
-            string name;
-            cin >> name;
-
-            int priority;
-            cin >> priority;
-
-            insertTheater(theater, name, registrationNumber, priority, queue);
-            registrationNumber++;
-        }
-        else if(command == "REM") {
-            string name;
-            cin >> name;
-
-            int registration;
-            cin >> registration;
-
-            removeTheater(theater, registration, queue);
-        }
-        else if(command == "VER") {
-            string name;
-            cin >> name;
-
-            int registration;
-            cin >> registration;
-
-            situationTheater(theater, registration, queue);
-        }
-    }
-    return 0;
+    int rows, seatsPerRow;
+    cin >> rows >> seatsPerRow;
+    ValuePair hashtable[rows][seatsPerRow];
+    People person;
 }
