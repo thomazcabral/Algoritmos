@@ -9,9 +9,14 @@ struct People {
     int priority;
 };
 
-struct ValuePair {
-    People* person;
-    int index;
+struct HashNode {
+    People** heap;
+    int size;
+};
+
+struct HashTable {
+    HashNode** table;
+    int size;
 };
 
 void swap(People*& a, People*& b) {
@@ -20,15 +25,26 @@ void swap(People*& a, People*& b) {
     b = temp;
 }
 
-/*void initializeHashTable(ValuePair hashtable[][], int rows, int seatsPerRow) {
+int hashFunction(HashTable* hashtable, int rows, int seatsPerRow) {
     for(int i = 0; i < rows; i++) {
         for(int j = 0; j < seatsPerRow; j++) {
-            hashtable[i][j].value = -1;
-            hashtable[i][j].index = i + 1;
+            if(hashtable->table[i]->heap[j] == nullptr) {
+                return i;
+            }
         }
     }
+    return -1; // if everything is occupied
 }
-*/
+
+People* createPerson(string name, int registration, int priority) {
+    People* newPerson = new People;
+    newPerson->name = name;
+    newPerson->registration = registration;
+    newPerson->priority = priority;
+
+    return newPerson;
+}
+
 // MAX HEAP
 
 void maxHeapify(People* array[], int n, int i) {
@@ -56,23 +72,23 @@ void buildMaxHeap(People* array[], int n) {
     }
 }
 
-void insertMaxHeap(People* array[], int& n, People* person) {
-    n++;
-    int i = n - 1;
-    array[i] = person;
+void insertMaxHeap(HashNode* node, People* person) {
+    node->heap[node->size] = person;
+    int i = node->size;
+    node->size++;
 
-    while(i > 0 && array[(i - 1) / 2]->priority < array[i]->priority) {
-        swap(array[i], array[(i - 1) / 2]);
+    while(i > 0 && node->heap[(i - 1) / 2]->priority < node->heap[i]->priority) {
+        swap(node->heap[i], node->heap[(i - 1) / 2]);
         i = (i - 1) / 2;
     }
 }
 
-People* removeMaxHeap(People* array[], int& n) {
-    People* root = array[0];
-    array[0] = array[n - 1];
-    n--;
+People* removeMaxHeap(HashNode* node) {
+    People* root = node->heap[0];
+    node->heap[0] = node->heap[node->size - 1];
+    node->size--;
 
-    maxHeapify(array, n, 0);
+    maxHeapify(node->heap, node->size, 0);
 
     return root;
 }
@@ -104,30 +120,124 @@ void buildMinHeap(People* array[], int n) {
     }
 }
 
-void insertMinHeap(People* array[], int& n, People* person) {
-    n++;
-    int i = n - 1;
-    array[i] = person;
+void insertMinHeap(HashNode* node, People* person) {
+    node->heap[node->size] = person;
+    int i = node->size;
+    node->size++;
 
-    while(i > 0 && array[(i - 1) / 2]->priority > array[i]->priority) {
-        swap(array[i], array[(i - 1) / 2]);
+    while(i > 0 && node->heap[(i - 1) / 2]->priority > node->heap[i]->priority) {
+        swap(node->heap[i], node->heap[(i - 1) / 2]);
         i = (i - 1) / 2;
     }
 }
 
-People* removeMinHeap(People* array[], int& n) {
-    People* root = array[0];
-    array[0] = array[n - 1];
-    n--;
+People* removeMinHeap(HashNode* node) {
+    People* root = node->heap[0];
+    node->heap[0] = node->heap[node->size - 1];
+    node->size--;
 
-    minHeapify(array, n, 0);
+    minHeapify(node->heap, node->size, 0);
 
     return root;
+}
+
+// 3 FUNCTIONS
+
+void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* person, HashNode* waitingList, int& waitingListSize) {
+    int row = hashFunction(hashtable, rows, seatsPerRow);
+
+    if(row != -1) {
+        insertMinHeap(hashtable->table[row], person);
+    }
+    else { // the theater is full
+        People* leastPriorityPerson = nullptr;
+        int leastPriorityRow = -1;
+        for(int i = 0; i < rows; i++) {
+            People* someone = hashtable->table[i]->heap[0];
+            if(leastPriorityPerson == nullptr || someone->priority < leastPriorityPerson->priority) {
+                leastPriorityPerson = someone;
+                leastPriorityRow = i;
+            }
+        }
+        People* someone = removeMinHeap(hashtable->table[leastPriorityRow]);
+
+        if(someone->priority < person->priority) {
+            insertMinHeap(hashtable->table[leastPriorityRow], person); // insert the new person in theater
+            insertMaxHeap(waitingList, someone); // insert the person from the theater in the waiting list
+        }
+        else if(someone->priority > person->priority) {
+            insertMaxHeap(waitingList, person); // insert the new person in the waiting list
+            insertMinHeap(hashtable->table[leastPriorityRow], someone); // insert the person from the theater in the theater
+        }
+        else {
+            if(someone->registration < person->registration) {
+                insertMaxHeap(waitingList, person); // insert the new person in the waiting list
+                insertMinHeap(hashtable->table[leastPriorityRow], someone); // insert the person from the theater in the theater
+            }
+            else {
+                insertMinHeap(hashtable->table[leastPriorityRow], person); // insert the new person in theater
+                insertMaxHeap(waitingList, someone); // insert the person from the theater in the waiting list
+            }
+        }
+        waitingList->size++;
+    }
+}
+
+void clean(HashTable* hashtable, int rows, HashNode* waitingList) {
+    for(int i = 0; i < rows; i++) {
+        delete[] hashtable->table[i]->heap;
+        delete hashtable->table[i];
+    }
+    delete[] hashtable->table;
+    delete hashtable;
+    delete[] waitingList->heap;
+    delete waitingList;
 }
 
 int main() {
     int rows, seatsPerRow;
     cin >> rows >> seatsPerRow;
-    ValuePair hashtable[rows][seatsPerRow];
-    People person;
+
+    HashTable* hashtable = new HashTable; // create hash table
+    hashtable->size = rows;
+    hashtable->table = new HashNode*[rows];
+
+    for(int i = 0; i < rows; i++) { // create hash nodes
+        hashtable->table[i] = new HashNode;
+        hashtable->table[i]->heap = new People*[seatsPerRow];
+        hashtable->table[i]->size = 0;
+        for (int j = 0; j < seatsPerRow; j++) { // possible tle issue
+            hashtable->table[i]->heap[j] = nullptr;
+        }
+    }
+
+    HashNode* waitingList = new HashNode;
+    waitingList->heap = new People*[2 * rows * seatsPerRow];
+    waitingList->size = 0;
+
+    int commands;
+    cin >> commands;
+
+    int registrationNumber = 1;
+
+    for(int i = 0; i < commands; i++) {
+        string command;
+        cin >> command;
+
+        if(command == "CAD") {
+            string name;
+            cin >> name;
+
+            int priority;
+            cin >> priority;
+
+            People* person = createPerson(name, registrationNumber, priority);
+            insertTheater_CAD(hashtable, rows, seatsPerRow, person, waitingList, waitingList->size);
+            registrationNumber++;
+        }
+    }
+
+    clean(hashtable, rows, waitingList);
+
+    return 0;
 }
