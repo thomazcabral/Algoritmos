@@ -77,6 +77,7 @@ void insertMaxHeap(HashNode* node, People* person) {
     int i = node->size;
     node->size++;
 
+    //SEGMENTATION FAULT!!!!
     while(i > 0 && node->heap[(i - 1) / 2]->priority < node->heap[i]->priority) {
         swap(node->heap[i], node->heap[(i - 1) / 2]);
         i = (i - 1) / 2;
@@ -147,6 +148,7 @@ void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* 
     int row = hashFunction(hashtable, rows, seatsPerRow);
 
     if(row != -1) {
+        cout << person->name << " (" << person->registration << ") foi alocado(a) na fileira " << row + 1 << "\n";
         insertMinHeap(hashtable->table[row], person);
     }
     else { // the theater is full
@@ -164,19 +166,26 @@ void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* 
         if(someone->priority < person->priority) {
             insertMinHeap(hashtable->table[leastPriorityRow], person); // insert the new person in theater
             insertMaxHeap(waitingList, someone); // insert the person from the theater in the waiting list
+            cout << person->name << " (" << person->registration << ") foi alocado(a) na fileira " << leastPriorityRow + 1 << "\n";
+
         }
         else if(someone->priority > person->priority) {
             insertMaxHeap(waitingList, person); // insert the new person in the waiting list
             insertMinHeap(hashtable->table[leastPriorityRow], someone); // insert the person from the theater in the theater
+            cout << person->name << " (" << person->registration << ") nao foi alocado(a) em nenhuma fileira" << "\n";
         }
         else {
             if(someone->registration < person->registration) {
                 insertMaxHeap(waitingList, person); // insert the new person in the waiting list
                 insertMinHeap(hashtable->table[leastPriorityRow], someone); // insert the person from the theater in the theater
+                cout << person->name << " (" << person->registration << ") nao foi alocado(a) em nenhuma fileira" << "\n";
+
             }
             else {
                 insertMinHeap(hashtable->table[leastPriorityRow], person); // insert the new person in theater
                 insertMaxHeap(waitingList, someone); // insert the person from the theater in the waiting list
+                cout << person->name << " (" << person->registration << ") foi alocado(a) na fileira " << leastPriorityRow + 1 << "\n";
+
             }
         }
         waitingList->size++;
@@ -200,7 +209,7 @@ int main() {
 
     HashTable* hashtable = new HashTable; // create hash table
     hashtable->size = rows;
-    hashtable->table = new HashNode*[rows];
+    hashtable->table = new HashNode*[rows - 1];
 
     for(int i = 0; i < rows; i++) { // create hash nodes
         hashtable->table[i] = new HashNode;
@@ -234,10 +243,13 @@ int main() {
             People* person = createPerson(name, registrationNumber, priority);
             insertTheater_CAD(hashtable, rows, seatsPerRow, person, waitingList, waitingList->size);
             registrationNumber++;
+            /*for(int i = 0; i < 8; i++) {
+                cout << hashtable->table[0]->heap[i] << " ";
+            }
+            cout << "\n";*/
         }
     }
 
     clean(hashtable, rows, waitingList);
-
     return 0;
 }
