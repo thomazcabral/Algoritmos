@@ -19,12 +19,6 @@ struct HashTable {
     int size;
 };
 
-void swap(People*& a, People*& b) {
-    People* temp = a;
-    a = b;
-    b = temp;
-}
-
 int hashFunction(HashTable* hashtable, int rows, int seatsPerRow) {
     for(int i = 0; i < rows; i++) {
         for(int j = 0; j < seatsPerRow; j++) {
@@ -47,44 +41,45 @@ People* createPerson(string name, int registration, int priority) {
 
 // MAX HEAP
 
-void maxHeapify(People* array[], int n, int i) {
+void maxHeapify(People* array[], int size, int i) {
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
 
-    if(left < n && array[left]->priority > array[largest]->priority) {
+    if(left < size && array[left]->priority > array[largest]->priority) {
         largest = left;
     }
 
-    if(right < n && array[right]->priority > array[largest]->priority) {
+    if(right < size && array[right]->priority > array[largest]->priority) {
         largest = right;
     }
 
     if(largest != i) {
         swap(array[i], array[largest]);
-        maxHeapify(array, n, largest);
+        maxHeapify(array, size, largest);
     }
 }
 
-void buildMaxHeap(People* array[], int n) {
-    for(int i = n / 2 - 1; i >= 0; i--) {
-        maxHeapify(array, n, i);
+void buildMaxHeap(People* array[], int size) {
+    if(size >= 2) {
+        for(int i = size / 2 - 1; i >= 0; i--) {
+            maxHeapify(array, size, i);
+        }
     }
 }
 
 void insertMaxHeap(HashNode* node, People* person) {
     node->heap[node->size] = person;
-    int i = node->size;
     node->size++;
-
-    //SEGMENTATION FAULT!!!!
-    while(i > 0 && node->heap[(i - 1) / 2]->priority < node->heap[i]->priority) {
-        swap(node->heap[i], node->heap[(i - 1) / 2]);
-        i = (i - 1) / 2;
-    }
+    buildMaxHeap(node->heap, node->size);
 }
 
 People* removeMaxHeap(HashNode* node) {
+    if(node->size == 1) {
+        node->size--;
+        return node->heap[0];
+    }
+
     People* root = node->heap[0];
     node->heap[0] = node->heap[node->size - 1];
     node->size--;
@@ -96,43 +91,45 @@ People* removeMaxHeap(HashNode* node) {
 
 // MIN HEAP
 
-void minHeapify(People* array[], int n, int i) {
+void minHeapify(People* array[], int size, int i) {
     int smallest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
 
-    if(left < n && array[left]->priority < array[smallest]->priority) {
+    if(left < size && array[left]->priority < array[smallest]->priority) {
         smallest = left;
     }
 
-    if(right < n && array[right]->priority < array[smallest]->priority) {
+    if(right < size && array[right]->priority < array[smallest]->priority) {
         smallest = right;
     }
 
     if(smallest != i) {
         swap(array[i], array[smallest]);
-        minHeapify(array, n, smallest);
+        minHeapify(array, size, smallest);
     }
 }
 
-void buildMinHeap(People* array[], int n) {
-    for(int i = n / 2 - 1; i >= 0; i--) {
-        minHeapify(array, n, i);
+void buildMinHeap(People* array[], int size) {
+    if(size >= 2) {
+        for(int i = size / 2 - 1; i >= 0; i--) {
+            minHeapify(array, size, i);
+        }
     }
 }
 
 void insertMinHeap(HashNode* node, People* person) {
     node->heap[node->size] = person;
-    int i = node->size;
     node->size++;
-
-    while(i > 0 && node->heap[(i - 1) / 2]->priority > node->heap[i]->priority) {
-        swap(node->heap[i], node->heap[(i - 1) / 2]);
-        i = (i - 1) / 2;
-    }
+    buildMinHeap(node->heap, node->size);
 }
 
 People* removeMinHeap(HashNode* node) {
+    if(node->size == 1) {
+        node->size--;
+        return node->heap[0];
+    }
+
     People* root = node->heap[0];
     node->heap[0] = node->heap[node->size - 1];
     node->size--;
