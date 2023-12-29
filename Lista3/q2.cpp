@@ -149,7 +149,7 @@ People* removeMinHeap(HashNode* node) {
 
 // 3 FUNCTIONS
 
-void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* person, HashNode* waitingList, int& waitingListSize) {
+void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* person, HashNode* waitingList) {
     int row = hashFunction(hashtable, rows, seatsPerRow);
 
     if(row != -1) {
@@ -194,6 +194,28 @@ void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* 
             }
         }
     }
+}
+
+void verifyTheater_VER(HashTable* HashTable, int rows, int seatsPerRow, string name, int registrationNumber, HashNode* waitingList) {
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < seatsPerRow; j++) {
+            if(HashTable->table[i]->heap[j] != nullptr) {
+                if(HashTable->table[i]->heap[j]->registration == registrationNumber && HashTable->table[i]->heap[j]->name == name) {
+                    cout << "Sentado(a) na fileira " << i + 1 << "\n";
+                    return;
+                }
+            }
+        }
+    }
+    // If the person is not in the theater
+    for(int i = 0; i < waitingList->size; i++) {
+        if(waitingList->heap[i]->registration == registrationNumber && waitingList->heap[i]->name == name) {
+            cout << "Sem assento" << "\n";
+            return;
+        }
+    }
+    // If the person does not exist
+    cout << "Inexistente" << "\n";
 }
 
 void clean(HashTable* hashtable, int rows, HashNode* waitingList) {
@@ -245,8 +267,18 @@ int main() {
             cin >> priority;
 
             People* person = createPerson(name, registrationNumber, priority);
-            insertTheater_CAD(hashtable, rows, seatsPerRow, person, waitingList, waitingList->size);
+            insertTheater_CAD(hashtable, rows, seatsPerRow, person, waitingList);
             registrationNumber++;
+        }
+
+        if(command == "VER") {
+            string name;
+            cin >> name;
+
+            int registration;
+            cin >> registration;
+
+            verifyTheater_VER(hashtable, rows, seatsPerRow, name, registration, waitingList);
         }
     }
 
