@@ -254,7 +254,7 @@ void removeTheater_REM(HashTable* HashTable, int rows, int seatsPerRow, string n
         cout << "Inexistente" << "\n";
     }
     else {
-        cout << "Removido(a)";
+        cout << "Removido(a)" << "\n";
     }
 }
 
@@ -319,6 +319,16 @@ int main() {
             cin >> registration;
 
             verifyTheater_VER(hashtable, rows, seatsPerRow, name, registration, waitingList);
+        }
+
+        if(command == "REM") {
+            string name;
+            cin >> name;
+
+            int registration;
+            cin >> registration;
+
+            removeTheater_REM(hashtable, rows, seatsPerRow, name, registration, waitingList);
         }
     }
 
