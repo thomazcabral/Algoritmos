@@ -218,6 +218,46 @@ void verifyTheater_VER(HashTable* HashTable, int rows, int seatsPerRow, string n
     cout << "Inexistente" << "\n";
 }
 
+void removeTheater_REM(HashTable* HashTable, int rows, int seatsPerRow, string name, int registrationNumber, HashNode* waitingList) {
+    People* searched = nullptr;
+    int row = -1;
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < seatsPerRow; j++) {
+            if(HashTable->table[i]->heap[j] != nullptr) {
+                if(HashTable->table[i]->heap[j]->registration == registrationNumber && HashTable->table[i]->heap[j]->name == name) {
+                    searched = HashTable->table[i]->heap[j];
+                    row = i;
+                }
+            }
+        }
+    }
+    if(searched != nullptr) {
+        People* removed = removeMinHeap(HashTable->table[row]);
+        People* queued = removeMaxHeap(waitingList);
+        insertMinHeap(HashTable->table[row], queued);
+    }
+
+    if(searched == nullptr) {
+        for(int i = 0; i < waitingList->size; i++) {
+            if(waitingList->heap[i]->registration == registrationNumber && waitingList->heap[i]->name == name) {
+                searched = waitingList->heap[i];
+                row = i;
+            }
+        }
+    }
+
+    if(searched != nullptr) {
+        People* removed = removeMaxHeap(waitingList);
+    }
+
+    if(searched == nullptr) {
+        cout << "Inexistente" << "\n";
+    }
+    else {
+        cout << "Removido(a)";
+    }
+}
+
 void clean(HashTable* hashtable, int rows, HashNode* waitingList) {
     for(int i = 0; i < rows; i++) {
         delete[] hashtable->table[i]->heap;
