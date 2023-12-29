@@ -93,9 +93,32 @@ People* removeMaxHeap(HashNode* node) {
     return root;
 }
 
+void printTheater(HashTable* hashtable, HashNode* waitingList, int rows, int seatsPerRow) {
+    for(int i = 0; i < rows; i++) {
+        cout << "Row " << i + 1 << ": ";
+        for(int j = 0; j < seatsPerRow; j++) {
+            if(hashtable->table[i]->heap[j] != nullptr) {
+                cout << hashtable->table[i]->heap[j]->name << " ";
+            } else {
+                cout << "EMPTY ";
+            }
+        }
+        cout << "\n";
+    }
+
+    cout << "Waiting List: ";
+    for(int i = 0; i < waitingList->size; i++) {
+        if(waitingList->heap[i] != nullptr) {
+            cout << waitingList->heap[i]->name << " ";
+        }
+    }
+    cout << "\n";
+}
+
 // MIN HEAP
 
 void minHeapify(People* array[], int size, int i) {
+    cout << "PORRA";
     if(i >= size) {
         return;
     }
@@ -226,15 +249,17 @@ void removeTheater_REM(HashTable* HashTable, int rows, int seatsPerRow, string n
             if(HashTable->table[i]->heap[j] != nullptr) {
                 if(HashTable->table[i]->heap[j]->registration == registrationNumber && HashTable->table[i]->heap[j]->name == name) {
                     searched = HashTable->table[i]->heap[j];
+                    HashTable->table[i]->heap[j] = nullptr;
                     row = i;
                 }
             }
         }
     }
     if(searched != nullptr) {
-        People* removed = removeMinHeap(HashTable->table[row]);
         People* queued = removeMaxHeap(waitingList);
+        cout << "AAA";
         insertMinHeap(HashTable->table[row], queued);
+        cout << "BBB";
     }
 
     if(searched == nullptr) {
@@ -330,6 +355,7 @@ int main() {
 
             removeTheater_REM(hashtable, rows, seatsPerRow, name, registration, waitingList);
         }
+        printTheater(hashtable, waitingList, rows, seatsPerRow);
     }
 
     clean(hashtable, rows, waitingList);
