@@ -42,6 +42,10 @@ People* createPerson(string name, int registration, int priority) {
 // MAX HEAP
 
 void maxHeapify(People* array[], int size, int i) {
+    if(i >= size) {
+        return;
+    }
+
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
@@ -92,6 +96,10 @@ People* removeMaxHeap(HashNode* node) {
 // MIN HEAP
 
 void minHeapify(People* array[], int size, int i) {
+    if(i >= size) {
+        return;
+    }
+
     int smallest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
@@ -185,7 +193,6 @@ void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* 
 
             }
         }
-        waitingList->size++;
     }
 }
 
@@ -240,10 +247,6 @@ int main() {
             People* person = createPerson(name, registrationNumber, priority);
             insertTheater_CAD(hashtable, rows, seatsPerRow, person, waitingList, waitingList->size);
             registrationNumber++;
-            /*for(int i = 0; i < 8; i++) {
-                cout << hashtable->table[0]->heap[i] << " ";
-            }
-            cout << "\n";*/
         }
     }
 
