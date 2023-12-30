@@ -94,7 +94,7 @@ People* removeMaxHeap(HashNode* node) {
 }
 
 void printTheater(HashTable* hashtable, HashNode* waitingList, int rows, int seatsPerRow) {
-    for(int i = 0; i < rows; i++) {
+    for(int i = 0; i < 5; i++) {
         cout << "Row " << i + 1 << ": ";
         for(int j = 0; j < seatsPerRow; j++) {
             if(hashtable->table[i]->heap[j] != nullptr) {
@@ -194,6 +194,7 @@ void insertTheater_CAD(HashTable* hashtable, int rows, int seatsPerRow, People* 
             }
         }
         People* someone = removeMinHeap(hashtable->table[leastPriorityRow]);
+        hashtable->table[leastPriorityRow]->size--;
 
         if(someone->priority < person->priority) {
             insertMinHeap(hashtable->table[leastPriorityRow], person); // insert the new person in theater
@@ -261,8 +262,11 @@ void removeTheater_REM(HashTable* HashTable, int rows, int seatsPerRow, string n
     }
 
     if(searched != nullptr) {
-        People* queued = removeMaxHeap(waitingList);
-        insertMinHeap(HashTable->table[row], queued);
+        if(waitingList->size != 0) {
+            People* queued = removeMaxHeap(waitingList);
+            waitingList->size--;
+            insertMinHeap(HashTable->table[row], queued);
+        }
     }
     
     else {
@@ -275,7 +279,10 @@ void removeTheater_REM(HashTable* HashTable, int rows, int seatsPerRow, string n
             }
         }
         else {
-            People* removed = removeMaxHeap(waitingList);
+            if(waitingList->size != 0) {
+                People* removed = removeMaxHeap(waitingList);
+                waitingList->size--;
+            }
         }
     }
 
@@ -359,7 +366,7 @@ int main() {
 
             removeTheater_REM(hashtable, rows, seatsPerRow, name, registration, waitingList);
         }
-        //printTheater(hashtable, waitingList, rows, seatsPerRow);
+        printTheater(hashtable, waitingList, rows, seatsPerRow);
     }
 
     clean(hashtable, rows, waitingList);
