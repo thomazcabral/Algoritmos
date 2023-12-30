@@ -118,7 +118,6 @@ void printTheater(HashTable* hashtable, HashNode* waitingList, int rows, int sea
 // MIN HEAP
 
 void minHeapify(People* array[], int size, int i) {
-    cout << "PORRA";
     if(i >= size) {
         return;
     }
@@ -150,8 +149,13 @@ void buildMinHeap(People* array[], int size) {
 }
 
 void insertMinHeap(HashNode* node, People* person) {
-    node->heap[node->size] = person;
-    node->size++;
+    if(node->heap[node->size - 1] == nullptr) {
+        node->heap[node->size - 1] = person;
+    }
+    else {
+        node->heap[node->size] = person;
+        node->size++;
+    }
     buildMinHeap(node->heap, node->size);
 }
 
@@ -255,24 +259,24 @@ void removeTheater_REM(HashTable* HashTable, int rows, int seatsPerRow, string n
             }
         }
     }
+
     if(searched != nullptr) {
         People* queued = removeMaxHeap(waitingList);
-        cout << "AAA";
         insertMinHeap(HashTable->table[row], queued);
-        cout << "BBB";
     }
-
-    if(searched == nullptr) {
-        for(int i = 0; i < waitingList->size; i++) {
-            if(waitingList->heap[i]->registration == registrationNumber && waitingList->heap[i]->name == name) {
-                searched = waitingList->heap[i];
-                row = i;
+    
+    else {
+        if(searched == nullptr) {
+            for(int i = 0; i < waitingList->size; i++) {
+                if(waitingList->heap[i]->registration == registrationNumber && waitingList->heap[i]->name == name) {
+                    searched = waitingList->heap[i];
+                    row = i;
+                }
             }
         }
-    }
-
-    if(searched != nullptr) {
-        People* removed = removeMaxHeap(waitingList);
+        else {
+            People* removed = removeMaxHeap(waitingList);
+        }
     }
 
     if(searched == nullptr) {
@@ -355,7 +359,7 @@ int main() {
 
             removeTheater_REM(hashtable, rows, seatsPerRow, name, registration, waitingList);
         }
-        printTheater(hashtable, waitingList, rows, seatsPerRow);
+        //printTheater(hashtable, waitingList, rows, seatsPerRow);
     }
 
     clean(hashtable, rows, waitingList);
