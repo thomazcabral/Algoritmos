@@ -63,6 +63,17 @@ void printRows(Graph* graph) { //useful function for the code
     }
 }
 
+void DFS(Graph* graph, int vertex) {
+    cout << vertex << " ";
+    graph->visited[vertex] = true;
+
+    for (int i = graph->numVertices; i >= 0; i--) {
+        if (graph->adjMatrix[vertex][i] == 1 && !graph->visited[i]) {
+            DFS(graph, i);
+        }
+    }
+}
+
 void deleteGraph(Graph* graph) {
     for (int i = 0; i < graph->numVertices; i++) { // deallocating memory for the adjacency matrix
         delete[] graph->adjMatrix[i];
@@ -89,6 +100,8 @@ int main() {
     } while(condition != 0);
 
     printRows(graph);
+    cout << "\n";
+    DFS(graph, 0); // DFS from the vertex 0
 
     deleteGraph(graph);
 
