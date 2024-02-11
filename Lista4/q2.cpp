@@ -1,6 +1,6 @@
 #include <iostream>
 
-#define INFINITE 1000000000
+#define INFINITE 999999
 
 using namespace std;
 
@@ -34,9 +34,11 @@ Graph* createGraph(int numVertices) {
 }
 
 void addEdge(Graph* graph, int vertex1, int vertex2) { // maybe I'll have to add a & for graph
-    graph->adjMatrix[vertex1][vertex2] = 1;
-    graph->adjMatrix[vertex2][vertex1] = 1;
-    graph->numEdges++;
+    if (vertex1 >= 0 && vertex1 < graph->numVertices && vertex2 >= 0 && vertex2 < graph->numVertices) {
+        graph->adjMatrix[vertex1][vertex2] = 1;
+        graph->adjMatrix[vertex2][vertex1] = 1;
+        graph->numEdges++;
+    }
 }
 
 void dijkstra(Graph* graph, int source, int desired_vertex) {
@@ -47,6 +49,7 @@ void dijkstra(Graph* graph, int source, int desired_vertex) {
         distance[i] = INFINITE;
         visited[i] = false;
     }
+
 
     distance[source] = 0;
 
@@ -59,14 +62,18 @@ void dijkstra(Graph* graph, int source, int desired_vertex) {
         }
         visited[min_index] = true;
 
-        if (!visited[desired_vertex] && graph->adjMatrix[min_index][desired_vertex] && distance[min_index] != INFINITE && distance[min_index] + graph->adjMatrix[min_index][desired_vertex] < distance[desired_vertex]) {
-            distance[desired_vertex] = distance[min_index] + graph->adjMatrix[min_index][desired_vertex];
+
+        for (int v = 0; v < graph->numVertices; v++) {
+            if (!visited[v] && graph->adjMatrix[min_index][v] && distance[min_index] != INFINITE && distance[min_index] + graph->adjMatrix[min_index][v] < distance[v]) {
+                distance[v] = distance[min_index] + graph->adjMatrix[min_index][v];
+            }
         }
     }
+
     if (distance[desired_vertex] == INFINITE) {
-        cout << "Labirinto Impossivel";
+        std::cout << "Labirinto Impossivel";
     } else {
-        cout << distance[desired_vertex];
+        std::cout << distance[desired_vertex];
     }
 }
 
@@ -76,10 +83,14 @@ int main() {
     cin >> rows >> columns;
     Graph* graph = createGraph(rows*columns); // creating the graph
 
-    int maze[rows][columns];
+    int** maze = new int*[rows];
+    for (int i = 0; i < rows; i++) {
+        maze[i] = new int[columns];
+    }
     bool upLocked, downLocked, leftLocked, rightLocked;
 
-    int source, desired_vertex;
+    int source = -1; 
+    int desired_vertex = -1;
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
@@ -87,6 +98,7 @@ int main() {
             maze[i][j] = int(maze[i][j]);
         }
     }
+
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
@@ -113,36 +125,43 @@ int main() {
             } else {
                 rightLocked = false;
             }
-
             if (maze[i][j] != 1) {
                 if(!upLocked) {
                     if (maze[i - 1][j] != 1) {
-                        addEdge(graph, maze[i][j], maze[i - 1][j]);
+                        addEdge(graph, i * columns + j, (i-1) * columns + j);
                     }
                 }
                 if (!downLocked) {
                     if (maze[i + 1][j] != 1) {
-                        addEdge(graph, maze[i][j], maze[i + 1][j]);
+                        addEdge(graph, i * columns + j, (i+1) * columns + j);
                     }
                 }
                 if (!leftLocked) {
                     if (maze[i][j - 1] != 1) {
-                        addEdge(graph, maze[i][j], maze[i][j - 1]);
+                        addEdge(graph, i * columns + j, i * columns + j - 1);
                     }
                 }
                 if (!rightLocked) {
                     if (maze[i][j + 1] != 1) {
-                        addEdge(graph, maze[i][j], maze[i][j + 1]);
+                        addEdge(graph, i * columns + j, i * columns + j + 1);
                     }
                 }
             }
-            if (maze[i][j] == '2') {
-                source = maze[i][j];
+            if (maze[i][j] == 2) {
+                source = i * columns + j;
             }
-            if (maze[i][j] == '3') {
-                desired_vertex = maze[i][j];
+            if (maze[i][j] == 3) {
+                desired_vertex = i * columns + j;
             }
         }
     }
-    dijkstra(graph, source, desired_vertex);
+    if (source == -1 || desired_vertex == -1) {
+        std::cout << "Labirinto Impossivel";
+    }
+    else {
+        dijkstra(graph, source, desired_vertex);
+    }
+    std::cout << "\n";
+
+    return 0;
 }
