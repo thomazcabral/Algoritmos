@@ -1,167 +1,129 @@
-#include <iostream>
+// I tried to use Djikstra's algorithm, but it wasnt the best choice, so I used BFS instead
 
-#define INFINITE 999999
+#include <iostream>
 
 using namespace std;
 
-struct Graph {
-    int numVertices;
-    int numEdges;
-    int **adjMatrix; // adjacency matrix of the graph
-    bool *visited; // important to use when doing bfs and dfs search
+int directionsX[] = {-1, 1, 0, 0}; // search through X neighbors (right and left)
+int directionsY[] = {0, 0, -1, 1}; // search through Y neighbors (up and down)
+
+struct Vertex {
+    int x, y;
 };
 
-Graph* createGraph(int numVertices) {
-    Graph* graph = new Graph; // initializing the pointers
-    graph->numVertices = numVertices;
-    graph->numEdges = 0;
-    graph->adjMatrix = new int*[numVertices];
-    graph->visited = new bool[numVertices];
+struct Queue {
+    Vertex* block;
+    int front, rear;
+    int size; // rows * columns, avoiding the use of MAX_ROWS and MAX_COLUMNS
 
-    for (int i = 0; i < numVertices; i++) { // allocating memory for the adjacency matrix
-        graph->adjMatrix[i] = new int[numVertices];
-        for (int j = 0; j < numVertices; j++) {
-            graph->adjMatrix[i][j] = 0;
+    Queue(int size) { // initializing Queue
+        this->size = size; // I know that I have to do this, but Im still not sure why
+        block = new Vertex[size];
+        front = rear = 0;
+    }
+
+    ~Queue() { // deleting Queue
+        delete[] block;
+    }
+
+    // Queue functions
+    void push(Vertex v) {
+        block[rear++] = v; // adding an element to the end of the queue
+    }
+
+    Vertex pop(Vertex v) {
+        return block[front++]; // removing an element from the front of the queue
+    }
+
+    bool isEmpty() {
+        return front == rear; // checking if the queue is empty
+    }
+};
+
+int bfs(int** maze, Vertex* sourceVertex, Vertex* destinationVertex, int rows, int columns) {
+    Queue* queue = new Queue(rows * columns); // initializing a queue
+    bool** visited = new bool*[rows]; // initializing a visited array with rows length
+    int** distance = new int*[rows]; // initializing a distance array with rows length
+
+    for (int i = 0; i < rows; i++) {
+        visited[i] = new bool[columns]; // creating an array for each row
+        distance[i] = new int[columns]; // same as line above
+        for(int j = 0; j < columns; j++) { // RIP complexity time
+            visited[i][j] = false; // initializing all elements of visited as false
+            distance[i][j] = 0; // initializing all elements of distance as 0
         }
     }
 
-    for (int i = 0; i < numVertices; i++) { // allocating memory for the visited variable
-        graph->visited[i] = false;
-    }
+    queue->push(*sourceVertex); // adding the source vertex to the queue, first step of bfs
+    visited[sourceVertex->x][sourceVertex->y] = true; // marking the source vertex as visited
 
-    return graph;
+    while (!queue->isEmpty()) {
+        Vertex current = queue->pop(current); // removing the first element from the queue
+        
+        if (current.x == destinationVertex->x && current.y == destinationVertex->y) { // checking if the current vertex is the destination vertex
+            return distance[current.x][current.y]; // if so, it returns the distance and the functions stops
+        }
 
-}
+        for (int i = 0; i < 4; i++) { // checking in all 4 directions (neighbors)
+            int neighborX = current.x + directionsX[i];
+            int neighborY = current.y + directionsY[i];
 
-void addEdge(Graph* graph, int vertex1, int vertex2) { // maybe I'll have to add a & for graph
-    if (vertex1 >= 0 && vertex1 < graph->numVertices && vertex2 >= 0 && vertex2 < graph->numVertices) {
-        graph->adjMatrix[vertex1][vertex2] = 1;
-        graph->adjMatrix[vertex2][vertex1] = 1;
-        graph->numEdges++;
-    }
-}
-
-void dijkstra(Graph* graph, int source, int desired_vertex) {
-    int* distance = new int[graph->numVertices];
-    bool* visited = new bool[graph->numVertices];
-
-    for (int i = 0; i < graph->numVertices; i++) {
-        distance[i] = INFINITE;
-        visited[i] = false;
-    }
-
-
-    distance[source] = 0;
-
-    for (int count = 0; count < graph->numVertices; count++) {
-        int min_distance = INFINITE, min_index;
-        for (int v = 0; v < graph->numVertices; v++) {
-            if (!visited[v] && distance[v] <= min_distance) {
-                min_distance = distance[v], min_index = v;
+            if (neighborX >= 0 && neighborX < rows && neighborY >= 0 && neighborY < columns && maze[neighborX][neighborY] != 1 && !visited[neighborX][neighborY]) {
+                // let me explain this condition: firsty, it checks if neighborX and neighborY are inside the maze
+                // after, it checks if the neighbor isnt a wall, represent by 1 and after, it checks if the neighbor wasnt visited yet
+                queue->push({neighborX, neighborY}); // if all conditions are true, it adds the neighbor to the queue
+                visited[neighborX][neighborY] = true; // marks the neighbor as visited
+                distance[neighborX][neighborY] = distance[current.x][current.y] + 1;
             }
         }
-        visited[min_index] = true;
-
-
-        for (int v = 0; v < graph->numVertices; v++) {
-            if (!visited[v] && graph->adjMatrix[min_index][v] && distance[min_index] != INFINITE && distance[min_index] + graph->adjMatrix[min_index][v] < distance[v]) {
-                distance[v] = distance[min_index] + graph->adjMatrix[min_index][v];
-            }
-        }
     }
-
-    if (distance[desired_vertex] == INFINITE) {
-        std::cout << "Labirinto Impossivel";
-    } else {
-        std::cout << distance[desired_vertex];
-    }
+    return -1; // do this if the maze is impossible
 }
 
 int main() {
-
     int rows, columns;
     cin >> rows >> columns;
-    Graph* graph = createGraph(rows*columns); // creating the graph
 
     int** maze = new int*[rows];
-    for (int i = 0; i < rows; i++) {
-        maze[i] = new int[columns];
+    for(int i = 0; i < rows; i++) { // doing this to avoid the use of MAX_ROWS and MAX_COLUMNS
+        maze[i] = new int[columns]; // creating a matrix with rows and columns length
     }
-    bool upLocked, downLocked, leftLocked, rightLocked;
-
-    int source = -1; 
-    int desired_vertex = -1;
+    Vertex* source = new Vertex();
+    Vertex* destination = new Vertex();
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
             cin >> maze[i][j];
-            maze[i][j] = int(maze[i][j]);
-        }
-    }
-
-
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            if (i == 0) {
-                upLocked = true;
-            } else {
-                upLocked = false;
-            }
-
-            if (i == rows - 1) {
-                downLocked = true;
-            } else {
-                downLocked = false;
-            }
-
-            if (j == 0) {
-                leftLocked = true;
-            } else {
-                leftLocked = false;
-            }
-
-            if (j == columns - 1) {
-                rightLocked = true;
-            } else {
-                rightLocked = false;
-            }
-            if (maze[i][j] != 1) {
-                if(!upLocked) {
-                    if (maze[i - 1][j] != 1) {
-                        addEdge(graph, i * columns + j, (i-1) * columns + j);
-                    }
-                }
-                if (!downLocked) {
-                    if (maze[i + 1][j] != 1) {
-                        addEdge(graph, i * columns + j, (i+1) * columns + j);
-                    }
-                }
-                if (!leftLocked) {
-                    if (maze[i][j - 1] != 1) {
-                        addEdge(graph, i * columns + j, i * columns + j - 1);
-                    }
-                }
-                if (!rightLocked) {
-                    if (maze[i][j + 1] != 1) {
-                        addEdge(graph, i * columns + j, i * columns + j + 1);
-                    }
-                }
-            }
             if (maze[i][j] == 2) {
-                source = i * columns + j;
+                //*source = {i, j};
+                source->x = i;
+                source->y = j;
             }
-            if (maze[i][j] == 3) {
-                desired_vertex = i * columns + j;
+            else if (maze[i][j] == 3) {
+                //*destination = {i, j};
+                destination->x = i;
+                destination->y = j;
             }
+            // if maze[i][j] is 1, the way is blocked and this will be resolved within the bfs function
+            // if maze[i][j] is 0, it will automatically suppose it is a free way
         }
     }
-    if (source == -1 || desired_vertex == -1) {
-        std::cout << "Labirinto Impossivel";
+
+    int shortestPath = bfs(maze, source, destination, rows, columns);
+
+    if (shortestPath == -1) {
+        cout << "Labirinto Impossivel" << "\n";
     }
     else {
-        dijkstra(graph, source, desired_vertex);
+        cout << shortestPath << "\n";
     }
-    std::cout << "\n";
+
+    for(int i = 0; i < rows; i++) {
+        delete[] maze[i];
+    }
+    delete[] maze;
+    delete source;
+    delete destination; // deleting the last pieces of memory remaining in this code
 
     return 0;
 }
