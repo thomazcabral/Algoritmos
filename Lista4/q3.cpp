@@ -54,10 +54,10 @@ void dijkstra(Graph* graph, int sourceVertex) {  // it is not working properly
     graph->distance[sourceVertex] = 0; // the distance to itself is 0
 
     for (int i = 0; i < graph->numVertices; i++) {
-        int minDistanceVertex =INT_MAX;
+        int minDistanceVertex = -1;
 
         for (int j = 0; j < graph->numVertices; j++) { // finding the vertex with the minimum distance
-            if (!graph->visited[j] && (minDistanceVertex == INT_MAX || graph->distance[j] < graph->distance[minDistanceVertex])) {
+            if (!graph->visited[j] && (minDistanceVertex == -1 || graph->distance[j] < graph->distance[minDistanceVertex])) {
                 minDistanceVertex = j;
             }
         }
@@ -118,6 +118,10 @@ int main() {
         else {
             int vertex1, vertex2;
             cin >> vertex1 >> vertex2;
+            for (int i = 0; i < graph->numVertices; i++) { // reseting these arrays for the dijkstra's algorithm
+                graph->visited[i] = false;
+                graph->distance[i] = INT_MAX;
+            }
             dijkstra(graph, vertex1);
             if (graph->distance[vertex2] == INT_MAX) {
                 cout << -1 << "\n";
