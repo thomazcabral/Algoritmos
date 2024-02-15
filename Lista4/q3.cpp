@@ -1,6 +1,9 @@
 #include <iostream>
 
+#define INT_MAX 2147483647 // this is the maximum value for a 32-bit signed integer
+
 using namespace std;
+
 
 struct Graph {
     int numVertices;
@@ -30,7 +33,7 @@ Graph* createGraph(int numVertices) {
     }
 
     for (int i = 0; i < numVertices; i++) { 
-        graph->distance[i] = -1; // initially, the distance from the source to any vertex is infinity
+        graph->distance[i] = INT_MAX; // initially, the distance from the source to any vertex is infinity
     }
 
     return graph;
@@ -47,19 +50,19 @@ void removeEdge(Graph* graph, int vertex1, int vertex2) {
     graph->numEdges--;
 }
 
-void dijkstra(Graph* graph, int sourceVertex) {
+void dijkstra(Graph* graph, int sourceVertex) {  // it is not working properly
     graph->distance[sourceVertex] = 0; // the distance to itself is 0
 
     for (int i = 0; i < graph->numVertices; i++) {
-        int minDistanceVertex = -1;
+        int minDistanceVertex =INT_MAX;
 
         for (int j = 0; j < graph->numVertices; j++) { // finding the vertex with the minimum distance
-            if (!graph->visited[j] && (minDistanceVertex == -1 || graph->distance[j] < graph->distance[minDistanceVertex])) {
+            if (!graph->visited[j] && (minDistanceVertex == INT_MAX || graph->distance[j] < graph->distance[minDistanceVertex])) {
                 minDistanceVertex = j;
             }
         }
 
-        if (graph->distance[minDistanceVertex] == -1) {
+        if (graph->distance[minDistanceVertex] == INT_MAX) {
             break; // the vertex is not reachable from the source
         }
 
@@ -71,6 +74,15 @@ void dijkstra(Graph* graph, int sourceVertex) {
                 graph->distance[j] = graph->distance[minDistanceVertex] + edgeDistance;
             }
         }
+    }
+}
+
+void printAdjMatrix(Graph* graph) { // function just to help me debug
+    for (int i = 0; i < graph->numVertices; i++) {
+        for (int j = 0; j < graph->numVertices; j++) {
+            cout << graph->adjMatrix[i][j] << " ";
+        }
+        cout << "\n";
     }
 }
 
@@ -95,10 +107,10 @@ int main() {
         if (number == 1) {
             int vertex1, vertex2, time;
             cin >> vertex1 >> vertex2 >> time;
-            if (graph->adjMatrix[vertex1][vertex2] == 0 || graph->adjMatrix[vertex1][vertex2] > time) {
+            if (graph->adjMatrix[vertex1][vertex2] == 0) {
                 addEdge(graph, vertex1, vertex2, time);
             }
-            else {
+            else if (graph->adjMatrix[vertex1][vertex2] > time) {
                 removeEdge(graph, vertex1, vertex2);
                 addEdge(graph, vertex1, vertex2, time);
             }
@@ -107,7 +119,12 @@ int main() {
             int vertex1, vertex2;
             cin >> vertex1 >> vertex2;
             dijkstra(graph, vertex1);
-            cout << graph->distance[vertex2] << "\n";
+            if (graph->distance[vertex2] == INT_MAX) {
+                cout << -1 << "\n";
+            }
+            else {
+                cout << graph->distance[vertex2] << "\n";
+            }
         }
     }
     return 0;
