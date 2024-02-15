@@ -5,10 +5,10 @@ using namespace std;
 struct Graph {
     int numVertices;
     int numEdges;
-    int** adjMatrix // in a weighed graph, the difference is that an element will not necessarily be 1 or 0, but the weight of the edge
+    int** adjMatrix; // in a weighed graph, the difference is that an element will not necessarily be 1 or 0, but the weight of the edge
     bool* visited;
     int* distance; // this will be useful for the dijkstra's algorithm
-}
+};
 
 Graph* createGraph(int numVertices) {
     Graph* graph = new Graph;
@@ -30,7 +30,7 @@ Graph* createGraph(int numVertices) {
     }
 
     for (int i = 0; i < numVertices; i++) { 
-        graph->distance[i] = INT_MAX; // initially, the distance from the source to any vertex is infinity
+        graph->distance[i] = -1; // initially, the distance from the source to any vertex is infinity
     }
 
     return graph;
@@ -59,7 +59,7 @@ void dijkstra(Graph* graph, int sourceVertex) {
             }
         }
 
-        if (grapg->distance[minDistanceVertex] == INT_MAX) {
+        if (graph->distance[minDistanceVertex] == -1) {
             break; // the vertex is not reachable from the source
         }
 
@@ -88,7 +88,7 @@ int main() {
         addEdge(graph, vertex1, vertex2, time);
     }
 
-    for (int j = 0; i < events; j++) {
+    for (int j = 0; j < events; j++) {
         int number;
         cin >> number;
 
@@ -107,12 +107,7 @@ int main() {
             int vertex1, vertex2;
             cin >> vertex1 >> vertex2;
             dijkstra(graph, vertex1);
-            if (graph->distance[vertex2] == INT_MAX) {
-                cout << -1 << "\n";
-            }
-            else {
-                cout << graph->distance[vertex2] << "\n";
-            }
+            cout << graph->distance[vertex2] << "\n";
         }
     }
     return 0;
