@@ -1,143 +1,240 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
-
-#define INT_MAX 2147483647 // this is the maximum value for a 32-bit signed integer
 
 using namespace std;
 
+void add_heap(vector<int>& elementos) {
+    if (elementos.empty()) {
+        return;
+    }
 
-struct Graph {
-    int numVertices;
-    int numEdges;
-    int** adjMatrix; // vector<vector<int>>
-    bool* visited; // vector<bool>
-    int* distance; // vector<int>
-    vector<string> vertices;
+    int tamanho = elementos.size();
+    int indice = tamanho - 1;
+    int valor = move(elementos[indice]);
+
+    int pai = (indice - 1) / 2;
+
+    while (indice > 0 && elementos[pai] < valor) {
+        elementos[indice] = move(elementos[pai]);
+        indice = pai;
+        pai = (indice - 1) / 2;
+    }
+
+    elementos[indice] = move(valor);
+}
+
+void pop_heap(vector<int>& elementos) {
+    if (elementos.empty()) return;
+
+    int tamanho = elementos.size();
+    swap(elementos[0], elementos[tamanho - 1]);
+
+    int indice = 0;
+    int filho = 2 * indice + 1;
+    int valor = move(elementos[indice]);
+
+    while (filho < tamanho - 1) {
+        if (elementos[filho] < elementos[filho + 1]) {
+            filho++;
+        }
+
+        if (valor < elementos[filho]) {
+            elementos[indice] = move(elementos[filho]);
+            indice = filho;
+            filho = 2 * indice + 1;
+        } else {
+            break;
+        }
+    }
+
+    elementos[indice] = move(valor);
+}
+
+const int MAX_STRINGS = 3606806; // Maximum number of strings in the array
+const int QUANTIDADE_VERTICES = 708;
+
+// Custom priority queue implementation
+class PriorityQueue {
+private:
+    vector<int> elementos;
+
+public:
+    bool empty() const {
+        return elementos.empty();
+    }
+
+    void push(const int& elemento) {
+        elementos.push_back(elemento);
+        add_heap(elementos);
+    }
+
+    int pop() {
+        pop_heap(elementos);
+        int topo = elementos.back();
+        elementos.pop_back();
+        return topo;
+    }
 };
 
-Graph* createGraph(int numVertices) {
-    Graph* graph = new Graph;
-    graph->numVertices = numVertices;
-    graph->numEdges = 0;
-    graph->adjMatrix = new int*[numVertices];
-    graph->visited = new bool[numVertices];
-    graph->distance = new int[numVertices];
+class MyClass {
+private:
+    string aeroporto_origem[MAX_STRINGS];
+    string aeroporto_destino[MAX_STRINGS];
+    int distancia[MAX_STRINGS];
+    int tamanho;
 
-    for (int i = 0; i < numVertices; i++) { 
-        graph->adjMatrix[i] = new int[numVertices]; // allocating memory for the adjacency matrix
-        for (int j = 0; j < numVertices; j++) {
-            graph->adjMatrix[i][j] = 0; // the default here will be 0. If it is not 0, it is the weight of the edge between the vertices
+public:
+    MyClass() {
+        this->tamanho = 0;
+    }
+
+    bool permitirAdd(string inicio, string fim) {
+        for (int i = this->tamanho; i > this->tamanho/2; i--) {
+            if (aeroporto_origem[i] == inicio) {
+                if (aeroporto_destino[i] == fim) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    void addString(string inicio, string fim, int dist) {
+        if (this->tamanho == 0 || ((aeroporto_origem[this->tamanho-1] != inicio || aeroporto_destino[this->tamanho-1] != fim) && this->permitirAdd(inicio, fim))) {
+            aeroporto_origem[this->tamanho] = inicio;
+            aeroporto_destino[this->tamanho] = fim;
+            distancia[this->tamanho] = dist;
+            this->tamanho++;
         }
     }
 
-    for (int i = 0; i < numVertices; i++) { 
-        graph->visited[i] = false; // initially, no vertex has been visited. This will be useful for the dijkstra's algorithm
+    void displayStrings() {
+        for (int i = 0; i < this->tamanho; i++) {
+            cout << aeroporto_origem[i] << " " << aeroporto_destino[i] << " " << distancia[i] << "\n";
+        }
     }
 
-    for (int i = 0; i < numVertices; i++) { 
-        graph->distance[i] = INT_MAX; // initially, the distance from the source to any vertex is infinity
+    int indice(string aeroporto, string* aeroportos_vertices) {
+        for (int i = 0; i < QUANTIDADE_VERTICES; i++) {
+            if (aeroportos_vertices[i] == aeroporto) {
+                return i;
+            }
+        }
+        return -1;
     }
 
-    return graph;
+    int proximo_indice(int* menores_distancias, int* vertices_passados) {
+        int menor = -1;
+        int vertice = -1;
+        for (int i = 0; i < QUANTIDADE_VERTICES; i++) {
+            if (vertices_passados[i] == -1 && (menores_distancias[i] < menor || menor == -1)) {
+                menor = menores_distancias[i];
+                vertice = i;
+            }
+        }
+        return vertice;
+    }
 
-}
+    int buscar_distancia(string entrada, string saida) {
+        for (int i = 0; i < this->tamanho; i++) {
+            if (aeroporto_origem[i] == entrada && aeroporto_destino[i] == saida) {
+                return distancia[i];
+            }
+        }
+        
+        int vertices_passados[QUANTIDADE_VERTICES];
+        int menores_distancias[QUANTIDADE_VERTICES];
+        string aeroportos_vertices[QUANTIDADE_VERTICES];
+        int contador = 0;
+        int indice_inicio, indice_fim;
+        for (int i = 0; i < this->tamanho; i++) {
+            if (indice(aeroporto_destino[i], aeroportos_vertices)) {
+                vertices_passados[contador] = -1;
+                menores_distancias[contador] = -1;
+                aeroportos_vertices[contador] = aeroporto_destino[i];
+                if (aeroporto_destino[i] == entrada) {
+                    indice_inicio = contador;
+                } else if (aeroporto_destino[i] == saida) {
+                    indice_fim = contador;
+                }
+                contador++;
+                if (contador == QUANTIDADE_VERTICES) {
+                    break;
+                }
+            }
+        }
+        
+        vertices_passados[indice_inicio] = 0;
+        menores_distancias[indice_inicio] = 0;
+        contador = 0;
+        int indice_atual = indice_inicio;
+        int k_chegada;
 
-void addEdge(Graph* graph, string vertex1, string vertex2, int weight) {
-    int index1 = find(graph->vertices.begin(), graph->vertices.end(), vertex1) - graph->vertices.begin();
-    int index2 = find(graph->vertices.begin(), graph->vertices.end(), vertex2) - graph->vertices.begin();
-    graph->adjMatrix[index1][index2] = weight;
-    graph->numEdges++;
-}
+        PriorityQueue fila_prioridade;
 
-void removeEdge(Graph* graph, string vertex1, string vertex2) {
-    int index1 = find(graph->vertices.begin(), graph->vertices.end(), vertex1) - graph->vertices.begin();
-    int index2 = find(graph->vertices.begin(), graph->vertices.end(), vertex2) - graph->vertices.begin();
-    graph->adjMatrix[index1][index2] = 0;
-    graph->numEdges--;
-}
+        fila_prioridade.push(0);
 
-void dijkstra(Graph* graph, string sourceVertex) { 
-    int sourceIndex = find(graph->vertices.begin(), graph->vertices.end(), sourceVertex) - graph->vertices.begin();
-    graph->distance[sourceIndex] = 0; // the distance to itself is 0
+        while (!fila_prioridade.empty()) {
+            int current = fila_prioridade.pop();
 
-    for (int i = 0; i < graph->numVertices; i++) {
-        int minDistanceVertex = -1;
-
-        for (int j = 0; j < graph->numVertices; j++) { // finding the vertex with the minimum distance
-            if (!graph->visited[j] && (minDistanceVertex == -1 || graph->distance[j] < graph->distance[minDistanceVertex])) {
-                minDistanceVertex = j;
+            for (int i = 0; i < this->tamanho; i++) {
+                if (aeroporto_origem[i] == aeroportos_vertices[current]) {
+                    k_chegada = indice(aeroporto_destino[i], aeroportos_vertices);
+                    if (menores_distancias[k_chegada] == -1 || (menores_distancias[k_chegada] > this->distancia[i] + menores_distancias[current])) {
+                        menores_distancias[k_chegada] = this->distancia[i] + menores_distancias[current];
+                        fila_prioridade.push(menores_distancias[k_chegada]);
+                    }
+                }
             }
         }
 
-        if (graph->distance[minDistanceVertex] == INT_MAX) {
-            break; // the vertex is not reachable from the source
-        }
-
-        graph->visited[minDistanceVertex] = true;
-
-        for (int j = 0; j < graph->numVertices; j++) {
-            int edgeDistance = graph->adjMatrix[minDistanceVertex][j];
-            if (edgeDistance > 0 && graph->distance[minDistanceVertex] + edgeDistance < graph->distance[j]) {
-                graph->distance[j] = graph->distance[minDistanceVertex] + edgeDistance;
-            }
-        }
+        return menores_distancias[indice_fim];
     }
-}
-
-vector<string> split(const string& s, char delimiter) {
-    vector<string> tokens;
-    string token;
-    for (int i = 0; i < s.size(); i++) {
-        if (s[i] == delimiter) {
-            tokens.push_back(token);
-            token = "";
-        }
-        else {
-            token += s[i];
-        }
-    }
-    tokens.push_back(token);
-    return tokens;
-}
+};
 
 int main() {
-    int arbitraryNumber = 5;
-    Graph* graph = createGraph(arbitraryNumber);
-
-    ifstream file("Airports2.csv");
+    ifstream file;
+    file.open("test.csv");
     string line;
+    getline(file, line);
 
-    while(getline(file, line)) {
-        vector<string> fields = split(line, ',');
-        if (find(graph->vertices.begin(), graph->vertices.end(), fields[0]) == graph->vertices.end()) {
-            graph->vertices.push_back(fields[0]);
-            graph->numVertices++;
-        }
-        if (find(graph->vertices.begin(), graph->vertices.end(), fields[1]) == graph->vertices.end()) {
-            graph->vertices.push_back(fields[1]);
-            graph->numVertices++;
+    MyClass *myObject = new MyClass();
+
+    int contador;
+    int inicio, fim;
+    while (getline(file, line)) {
+        contador = 0;
+        inicio = -1;
+        fim = -1;
+        for (int i = 0; i < (int) line.size(); i++) {
+            if (line[i] == ',') {
+                contador++;
+                if (contador == 9 && inicio == -1) {
+                    inicio = i;
+                } else if (contador == 10 && fim == -1) {
+                    fim = i;
+                    break;
+                }
+            }
         }
 
-        if (graph->adjMatrix[find(graph->vertices.begin(), graph->vertices.end(), fields[0]) - graph->vertices.begin()][find(graph->vertices.begin(), graph->vertices.end(), fields[1]) - graph->vertices.begin()] == 0) {
-            addEdge(graph, fields[0], fields[1], stoi(fields[7]));
-        }
-        else if (graph->adjMatrix[find(graph->vertices.begin(), graph->vertices.end(), fields[0]) - graph->vertices.begin()][find(graph->vertices.begin(), graph->vertices.end(), fields[0]) - graph->vertices.begin()] > stoi(fields[7])) {
-            removeEdge(graph, fields[0], fields[1]);
-            addEdge(graph, fields[0], fields[1], stoi(fields[7]));
+        if (line.substr(inicio+1, fim-inicio-1) != "0") {
+            myObject->addString(line.substr(1, 3), line.substr(7, 3), stoi(line.substr(inicio+1, fim-inicio-1)));
         }
     }
-
-    string originAirport, destinationAirport;
-    cin >> originAirport >> destinationAirport;
-
-    dijkstra(graph, originAirport);
-
-    if(graph->distance[find(graph->vertices.begin(), graph->vertices.end(), destinationAirport) - graph->vertices.begin()] == INT_MAX) {
-        cout << "There is no path between the airports\n";
+    file.close();
+    
+    string entrada;
+    string saida;
+    cin >> entrada >> saida;
+    if (entrada == saida) {
+        cout << 0;
+    } else {
+        int resp = myObject->buscar_distancia(entrada, saida);
+        cout << resp;
     }
-    else {
-        cout << "The shortest path between the airports is " << graph->distance[find(graph->vertices.begin(), graph->vertices.end(), destinationAirport) - graph->vertices.begin()] << " minutes\n";
-    }
+
+    return 0;
 }
