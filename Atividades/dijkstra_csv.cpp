@@ -16,6 +16,7 @@ void add_heap(vector<int>& elementos) {
 
     int pai = (indice - 1) / 2;
 
+    // troca os valores enquanto o valor do pai for menor que o do filho
     while (indice > 0 && elementos[pai] < valor) {
         elementos[indice] = move(elementos[pai]);
         indice = pai;
@@ -35,6 +36,7 @@ void pop_heap(vector<int>& elementos) {
     int filho = 2 * indice + 1;
     int valor = move(elementos[indice]);
 
+    // mesma função do while da função anterior
     while (filho < tamanho - 1) {
         if (elementos[filho] < elementos[filho + 1]) {
             filho++;
@@ -52,10 +54,10 @@ void pop_heap(vector<int>& elementos) {
     elementos[indice] = move(valor);
 }
 
-const int MAX_STRINGS = 3606806; // Maximum number of strings in the array
+const int MAX_STRINGS = 3606806;
 const int QUANTIDADE_VERTICES = 708;
 
-// Custom priority queue implementation
+
 class PriorityQueue {
 private:
     vector<int> elementos;
@@ -90,6 +92,7 @@ public:
         this->tamanho = 0;
     }
 
+    // as vezes não é interessante adicionarmos um mesmo voo duas vezes. Essa função verifica isso
     bool permitirAdd(string inicio, string fim) {
         for (int i = this->tamanho; i > this->tamanho/2; i--) {
             if (aeroporto_origem[i] == inicio) {
@@ -101,6 +104,7 @@ public:
         return true;
     }
 
+    // utilizada quando se quer adicionar um novo trajeto
     void addString(string inicio, string fim, int dist) {
         if (this->tamanho == 0 || ((aeroporto_origem[this->tamanho-1] != inicio || aeroporto_destino[this->tamanho-1] != fim) && this->permitirAdd(inicio, fim))) {
             aeroporto_origem[this->tamanho] = inicio;
@@ -116,6 +120,7 @@ public:
         }
     }
 
+    // retorna o índice de um aeroporto, algo que não seria preciso caso tivéssemos int em vez de strings como valores
     int indice(string aeroporto, string* aeroportos_vertices) {
         for (int i = 0; i < QUANTIDADE_VERTICES; i++) {
             if (aeroportos_vertices[i] == aeroporto) {
@@ -125,6 +130,7 @@ public:
         return -1;
     }
 
+    // útil pra próxima função
     int proximo_indice(int* menores_distancias, int* vertices_passados) {
         int menor = -1;
         int vertice = -1;
@@ -137,6 +143,7 @@ public:
         return vertice;
     }
 
+    // basicamente o algoritmo de Dijkstra
     int buscar_distancia(string entrada, string saida) {
         for (int i = 0; i < this->tamanho; i++) {
             if (aeroporto_origem[i] == entrada && aeroporto_destino[i] == saida) {
@@ -149,6 +156,7 @@ public:
         string aeroportos_vertices[QUANTIDADE_VERTICES];
         int contador = 0;
         int indice_inicio, indice_fim;
+
         for (int i = 0; i < this->tamanho; i++) {
             if (indice(aeroporto_destino[i], aeroportos_vertices)) {
                 vertices_passados[contador] = -1;
@@ -179,10 +187,11 @@ public:
         while (!fila_prioridade.empty()) {
             int current = fila_prioridade.pop();
 
+            // iterando sobre cada elemento da fila de prioridade
             for (int i = 0; i < this->tamanho; i++) {
                 if (aeroporto_origem[i] == aeroportos_vertices[current]) {
                     k_chegada = indice(aeroporto_destino[i], aeroportos_vertices);
-                    if (menores_distancias[k_chegada] == -1 || (menores_distancias[k_chegada] > this->distancia[i] + menores_distancias[current])) {
+                    if (menores_distancias[k_chegada] == -1 || (menores_distancias[k_chegada] > this->distancia[i] + menores_distancias[current])) { // conferindo se a distância é menor
                         menores_distancias[k_chegada] = this->distancia[i] + menores_distancias[current];
                         fila_prioridade.push(menores_distancias[k_chegada]);
                     }
@@ -196,7 +205,7 @@ public:
 
 int main() {
     ifstream file;
-    file.open("test.csv");
+    file.open("Airports2.csv");
     string line;
     getline(file, line);
 
@@ -220,6 +229,7 @@ int main() {
             }
         }
 
+        // formatando a entrada da maneira que queremos e adicionando um trajeto
         if (line.substr(inicio+1, fim-inicio-1) != "0") {
             myObject->addString(line.substr(1, 3), line.substr(7, 3), stoi(line.substr(inicio+1, fim-inicio-1)));
         }
