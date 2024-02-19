@@ -1,166 +1,124 @@
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <vector>
+#include <string>
 
 using namespace std;
 
-void add_heap(vector<int>& elementos) {
-    if (elementos.empty()) {
-        return;
-    }
+const int MAX_INT = 2147483647;  
 
-    int tamanho = elementos.size();
-    int indice = tamanho - 1;
-    int valor = move(elementos[indice]);
-
-    int pai = (indice - 1) / 2;
-
-    // troca os valores enquanto o valor do pai for menor que o do filho
-    while (indice > 0 && elementos[pai] < valor) {
-        elementos[indice] = move(elementos[pai]);
-        indice = pai;
-        pai = (indice - 1) / 2;
-    }
-
-    elementos[indice] = move(valor);
-}
-
-void pop_heap(vector<int>& elementos) {
-    if (elementos.empty()) return;
-
-    int tamanho = elementos.size();
-    swap(elementos[0], elementos[tamanho - 1]);
-
-    int indice = 0;
-    int filho = 2 * indice + 1;
-    int valor = move(elementos[indice]);
-
-    // mesma função do while da função anterior
-    while (filho < tamanho - 1) {
-        if (elementos[filho] < elementos[filho + 1]) {
-            filho++;
-        }
-
-        if (valor < elementos[filho]) {
-            elementos[indice] = move(elementos[filho]);
-            indice = filho;
-            filho = 2 * indice + 1;
-        } else {
-            break;
-        }
-    }
-
-    elementos[indice] = move(valor);
-}
-
-const int MAX_STRINGS = 3606806;
-const int QUANTIDADE_VERTICES = 708;
-
+const int QUANTIDADE_VERTICES = 1391;
 
 class PriorityQueue {
 private:
-    vector<int> elementos;
+    vector<pair<int, int>> pq;
+
+    void push_heap() {
+        int idx = pq.size() - 1;
+        while (idx > 0) {
+            int parent = (idx - 1) / 2;
+            if (pq[parent].first > pq[idx].first) {
+                swap(pq[parent], pq[idx]);
+                idx = parent;
+            } else {
+                break;
+            }
+        }
+    }
+
+    void pop_heap() {
+        int last = pq.size() - 1;
+        swap(pq[0], pq[last]);
+        pq.pop_back();
+
+        int idx = 0;
+        int leftChild, rightChild, minChild;
+        while (true) {
+            leftChild = 2 * idx + 1;
+            rightChild = 2 * idx + 2;
+            minChild = idx;
+
+            if (leftChild < pq.size() && pq[leftChild].first < pq[minChild].first) {
+                minChild = leftChild;
+            }
+            if (rightChild < pq.size() && pq[rightChild].first < pq[minChild].first) {
+                minChild = rightChild;
+            }
+
+            if (minChild != idx) {
+                swap(pq[idx], pq[minChild]);
+                idx = minChild;
+            } else {
+                break;
+            }
+        }
+    }
 
 public:
-    bool empty() const {
-        return elementos.empty();
+    void push(int distance, int vertex) {
+        pq.push_back(make_pair(distance, vertex));
+        push_heap();
     }
 
-    void push(const int& elemento) {
-        elementos.push_back(elemento);
-        add_heap(elementos);
+    pair<int, int> top() {
+        return pq[0];
     }
 
-    int pop() {
-        pop_heap(elementos);
-        int topo = elementos.back();
-        elementos.pop_back();
-        return topo;
+    void pop() {
+        pop_heap();
+    }
+
+    bool empty() {
+        return pq.empty();
     }
 };
 
-class MyClass {
+class Graph {
 private:
-    string aeroporto_origem[MAX_STRINGS];
-    string aeroporto_destino[MAX_STRINGS];
-    int distancia[MAX_STRINGS];
+    vector<string> aeroporto_origem;
+    vector<string> aeroporto_destino;
+    vector<int> distancia;
     int tamanho;
 
 public:
-    MyClass() {
-        this->tamanho = 0;
+    Graph(vector<string> origem, vector<string> destino, vector<int> dist) {
+        this->aeroporto_origem = origem;
+        this->aeroporto_destino = destino;
+        this->distancia = dist;
+        this->tamanho = origem.size();
     }
 
-    // as vezes não é interessante adicionarmos um mesmo voo duas vezes. Essa função verifica isso
-    bool permitirAdd(string inicio, string fim) {
-        for (int i = this->tamanho; i > this->tamanho/2; i--) {
-            if (aeroporto_origem[i] == inicio) {
-                if (aeroporto_destino[i] == fim) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    // utilizada quando se quer adicionar um novo trajeto
-    void addString(string inicio, string fim, int dist) {
-        if (this->tamanho == 0 || ((aeroporto_origem[this->tamanho-1] != inicio || aeroporto_destino[this->tamanho-1] != fim) && this->permitirAdd(inicio, fim))) {
-            aeroporto_origem[this->tamanho] = inicio;
-            aeroporto_destino[this->tamanho] = fim;
-            distancia[this->tamanho] = dist;
-            this->tamanho++;
-        }
-    }
-
-    void displayStrings() {
-        for (int i = 0; i < this->tamanho; i++) {
-            cout << aeroporto_origem[i] << " " << aeroporto_destino[i] << " " << distancia[i] << "\n";
-        }
-    }
-
-    // retorna o índice de um aeroporto, algo que não seria preciso caso tivéssemos int em vez de strings como valores
-    int indice(string aeroporto, string* aeroportos_vertices) {
-        for (int i = 0; i < QUANTIDADE_VERTICES; i++) {
-            if (aeroportos_vertices[i] == aeroporto) {
+    int indice(const string& aeroporto, const vector<string>& aeroportos_vertices) {
+        for (int i = 0; i < aeroportos_vertices.size(); ++i) {
+            if (aeroporto == aeroportos_vertices[i]) {
                 return i;
             }
         }
         return -1;
     }
 
-    // útil pra próxima função
-    int proximo_indice(int* menores_distancias, int* vertices_passados) {
-        int menor = -1;
-        int vertice = -1;
-        for (int i = 0; i < QUANTIDADE_VERTICES; i++) {
-            if (vertices_passados[i] == -1 && (menores_distancias[i] < menor || menor == -1)) {
-                menor = menores_distancias[i];
-                vertice = i;
-            }
-        }
-        return vertice;
-    }
-
-    // basicamente o algoritmo de Dijkstra
-    int buscar_distancia(string entrada, string saida) {
-        for (int i = 0; i < this->tamanho; i++) {
-            if (aeroporto_origem[i] == entrada && aeroporto_destino[i] == saida) {
-                return distancia[i];
-            }
-        }
-        
-        int vertices_passados[QUANTIDADE_VERTICES];
-        int menores_distancias[QUANTIDADE_VERTICES];
-        string aeroportos_vertices[QUANTIDADE_VERTICES];
+    int buscar_distancia(const string& entrada, const string& saida) {
+        vector<string> aeroportos_vertices(QUANTIDADE_VERTICES);
+        vector<int> vertices_passados(QUANTIDADE_VERTICES, -1);
+        vector<int> menores_distancias(QUANTIDADE_VERTICES, MAX_INT);  
         int contador = 0;
-        int indice_inicio, indice_fim;
+        int indice_inicio = -1, indice_fim = -1;
 
         for (int i = 0; i < this->tamanho; i++) {
-            if (indice(aeroporto_destino[i], aeroportos_vertices)) {
+            if (indice(aeroporto_origem[i], aeroportos_vertices) == -1) {
                 vertices_passados[contador] = -1;
-                menores_distancias[contador] = -1;
+                menores_distancias[contador] = MAX_INT; 
+                aeroportos_vertices[contador] = aeroporto_origem[i];
+                if (aeroporto_origem[i] == entrada) {
+                    indice_inicio = contador;
+                } else if (aeroporto_origem[i] == saida) {
+                    indice_fim = contador;
+                }
+                contador++;
+            }
+            if (indice(aeroporto_destino[i], aeroportos_vertices) == -1) {
+                vertices_passados[contador] = -1;
+                menores_distancias[contador] = MAX_INT;
                 aeroportos_vertices[contador] = aeroporto_destino[i];
                 if (aeroporto_destino[i] == entrada) {
                     indice_inicio = contador;
@@ -168,12 +126,16 @@ public:
                     indice_fim = contador;
                 }
                 contador++;
-                if (contador == QUANTIDADE_VERTICES) {
-                    break;
-                }
+            }
+            if (contador == QUANTIDADE_VERTICES) {
+                break;
             }
         }
-        
+
+        if (indice_inicio == -1 || indice_fim == -1) {
+            return -1; 
+        }
+
         vertices_passados[indice_inicio] = 0;
         menores_distancias[indice_inicio] = 0;
         contador = 0;
@@ -182,18 +144,20 @@ public:
 
         PriorityQueue fila_prioridade;
 
-        fila_prioridade.push(0);
+        fila_prioridade.push(0, indice_inicio);
 
         while (!fila_prioridade.empty()) {
-            int current = fila_prioridade.pop();
+            pair<int, int> current = fila_prioridade.top();
+            fila_prioridade.pop();
+            int current_distance = current.first;
+            int current_vertex = current.second;
 
-            // iterando sobre cada elemento da fila de prioridade
             for (int i = 0; i < this->tamanho; i++) {
-                if (aeroporto_origem[i] == aeroportos_vertices[current]) {
+                if (aeroporto_origem[i] == aeroportos_vertices[current_vertex]) {
                     k_chegada = indice(aeroporto_destino[i], aeroportos_vertices);
-                    if (menores_distancias[k_chegada] == -1 || (menores_distancias[k_chegada] > this->distancia[i] + menores_distancias[current])) { // conferindo se a distância é menor
-                        menores_distancias[k_chegada] = this->distancia[i] + menores_distancias[current];
-                        fila_prioridade.push(menores_distancias[k_chegada]);
+                    if (menores_distancias[k_chegada] == MAX_INT || (menores_distancias[k_chegada] > this->distancia[i] + menores_distancias[current_vertex])) {
+                        menores_distancias[k_chegada] = this->distancia[i] + menores_distancias[current_vertex];
+                        fila_prioridade.push(menores_distancias[k_chegada], k_chegada);
                     }
                 }
             }
@@ -209,7 +173,9 @@ int main() {
     string line;
     getline(file, line);
 
-    MyClass *myObject = new MyClass();
+    vector<string> origem;
+    vector<string> destino;
+    vector<int> distancias;
 
     int contador;
     int inicio, fim;
@@ -217,7 +183,7 @@ int main() {
         contador = 0;
         inicio = -1;
         fim = -1;
-        for (int i = 0; i < (int) line.size(); i++) {
+        for (int i = 0; i < static_cast<int>(line.size()); i++) {
             if (line[i] == ',') {
                 contador++;
                 if (contador == 9 && inicio == -1) {
@@ -229,9 +195,10 @@ int main() {
             }
         }
 
-        // formatando a entrada da maneira que queremos e adicionando um trajeto
         if (line.substr(inicio+1, fim-inicio-1) != "0") {
-            myObject->addString(line.substr(1, 3), line.substr(7, 3), stoi(line.substr(inicio+1, fim-inicio-1)));
+            origem.push_back(line.substr(1, 3));
+            destino.push_back(line.substr(7, 3));
+            distancias.push_back(stoi(line.substr(inicio+1, fim-inicio-1)));
         }
     }
     file.close();
@@ -239,11 +206,18 @@ int main() {
     string entrada;
     string saida;
     cin >> entrada >> saida;
+
+    Graph graph(origem, destino, distancias);
+    
     if (entrada == saida) {
         cout << 0;
     } else {
-        int resp = myObject->buscar_distancia(entrada, saida);
+        int resp = graph.buscar_distancia(entrada, saida);
+        if (resp == -1) {
+            cout << "Sem rotas disponiveis.";
+        } else {
         cout << resp;
+        }
     }
 
     return 0;
