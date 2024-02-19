@@ -4,6 +4,10 @@ Welcome to my repository dedicated to Algorithms and Data Structures, where I do
 ## Organization
 This repository is organized into folders, each one focusing on specific topics within algorithms and data structures. Whether you are exploring sorting algorithms, graph traversal techniques, or data structure implementations, you will find a variety of code examples to delve into.
 
+### Atividades (Extra activities)
+- Implementing Dijkstra's algorithm with the priority queue data structure using data from a csv file
+- Creating heaps basic functions
+
 ### Lista0 (List 0)
 - Introduction to C++, programming language that is used for all codes here.
 
