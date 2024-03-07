@@ -95,29 +95,12 @@ void addEdge(Graph* graph, int vertex1, int vertex2) { // maybe I'll have to add
     graph->stacks[vertex2]->push(vertex1);
 }
 
-/*void displayStacks(Graph* graph) {
-    for (int i = 0; i < graph->numVertices; i++) {
-        cout << i << ": ";
-        if (graph->stacks[i]->isEmpty()) {
-            cout << "Lista Vazia";
-        }
-        else {
-            while(!graph->stacks[i]->isEmpty()) {
-                cout << graph->stacks[i]->pop() << " ";
-            }
-        }
-        cout << "\n";
-    }
-}
-*/
-
 int DFS(Graph* graph, int vertex, int& num) {
-    cout << vertex << " ";
+    num++;
     graph->visited[vertex] = true;
 
     for (int i = graph->numVertices - 1; i >= 0; i--) {
         if (graph->adjMatrix[vertex][i] == 1 && !graph->visited[i]) {
-            num++;
             DFS(graph, i, num);
         }
     }
@@ -152,16 +135,15 @@ int main() {
         addEdge(graph, vertex1 - 1, vertex2 - 1);
     }
 
-    for(int j = 0; j <= edges; j++) {
+    for(int j = 0; j < numVertices; j++) {
+        for(int i = 0; i < numVertices; i++) {
+            graph->visited[i] = false;
+        }
         int num = 0;
         DFS(graph, j, num);
         cout << num << " ";
     }
     cout << "\n";
-
-    //displayStacks(graph);
-    //cout << "\n";
-    //num = DFS(graph, 0); // DFS from the vertex 0
 
     deleteGraph(graph);
 
