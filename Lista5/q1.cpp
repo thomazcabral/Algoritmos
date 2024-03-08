@@ -2,150 +2,138 @@
 
 using namespace std;
 
-struct Stack {
-    int* array;
-    int top;
-    int capacity;
-
-    Stack(int size) {
-        capacity = size;
-        array = new int[size];
-        top = -1;
-    }
-
-    ~Stack() {
-        delete[] array;
-    }
-
-    bool isFull() {
-        return top == capacity - 1;
-    }
-
-    bool isEmpty() {
-        return top == -1;
-    }
-
-    void push(int value) {
-        if (!isFull()) {
-            top++;
-            array[top] = value;
-        }
-    }
-
-    int pop() {
-        if (!isEmpty()) {
-            int value = array[top];
-            top--;
-            return value;
-        }
-    }
-
-    int checkTop() {
-        if (!isEmpty()) {
-            return array[top];
-        }
-    }
+struct Node {
+    int vertex;
+    Node* next;
 };
 
-Stack createStack(int size) {
-    return Stack(size);
+struct Queue {
+    Node *front, *rear;
+};
+
+Node* newNode(int v) {
+    Node* node = new Node;
+    node->vertex = v;
+    node->next = NULL;
+
+    return node;
+}
+
+Queue* createQueue() {
+    Queue* q = new Queue;
+    q->front = q->rear = NULL;
+
+    return q;
+}
+
+void enqueue(Queue* q, int v) {
+    Node* temp = newNode(v);
+
+    if (q->rear == NULL) {
+        q->front = q->rear = temp;
+        return;
+    }
+
+    q->rear->next = temp;
+    q->rear = temp;
+}
+
+int dequeue(Queue* q) {
+    if (q->front == NULL)
+        return -1;
+
+    Node* temp = q->front;
+
+    int value = temp->vertex;
+    q->front = q->front->next;
+    if (q->front == NULL)
+        q->rear = NULL;
+
+    delete temp;
+
+    return value;
 }
 
 struct Graph {
     int numVertices;
-    int numEdges;
-    int **adjMatrix; // adjacency matrix of the graph
-    bool *visited; // important to use when doing bfs and dfs search
-    Stack **stacks; // array of stacks
+    Node** adjLists;
+    bool* visited;
 };
 
-Graph* createGraph(int numVertices) {
-    Graph* graph = new Graph; // initializing the pointers
-    graph->numVertices = numVertices;
-    graph->numEdges = 0;
-    graph->adjMatrix = new int*[numVertices];
-    graph->visited = new bool[numVertices];
-    graph->stacks = new Stack*[numVertices];
+Graph* createGraph(int vertices) {
+    Graph* graph = new Graph;
+    graph->numVertices = vertices;
+    graph->adjLists = new Node*[vertices];
+    graph->visited = new bool[vertices];
 
-    for (int i = 0; i < numVertices; i++) { // allocating memory for the adjacency matrix
-        graph->adjMatrix[i] = new int[numVertices];
-        for (int j = 0; j < numVertices; j++) {
-            graph->adjMatrix[i][j] = 0;
-        }
-    }
-
-    for (int i = 0; i < numVertices; i++) { // allocating memory for the visited variable
+    for(int i = 0; i < vertices; i++) {
+        graph->adjLists[i] = NULL;
         graph->visited[i] = false;
     }
 
-    for (int i = 0; i < numVertices; i++) {
-        graph->stacks[i] = new Stack(numVertices);
-    }
-
     return graph;
-
 }
 
-void addEdge(Graph* graph, int vertex1, int vertex2) { // maybe I'll have to add a & for graph
-    graph->adjMatrix[vertex1][vertex2] = 1;
-    graph->adjMatrix[vertex2][vertex1] = 1;
-    graph->numEdges++;
+void addEdge(Graph* graph, int sourceVertex, int dest) {
+    Node* newNode = new Node;
+    newNode->vertex = dest;
+    newNode->next = graph->adjLists[sourceVertex];
+    graph->adjLists[sourceVertex] = newNode;
 
-    graph->stacks[vertex1]->push(vertex2);
-    graph->stacks[vertex2]->push(vertex1);
+    newNode = new Node;
+
+    newNode->vertex = sourceVertex;
+    newNode->next = graph->adjLists[dest];
+    graph->adjLists[dest] = newNode;
 }
 
-int DFS(Graph* graph, int vertex, int& num) {
-    num++;
-    graph->visited[vertex] = true;
+void BFS(Graph* graph, int startVertex, int& num) {
+    Queue* q = createQueue();
 
-    for (int i = graph->numVertices - 1; i >= 0; i--) {
-        if (graph->adjMatrix[vertex][i] == 1 && !graph->visited[i]) {
-            DFS(graph, i, num);
+    graph->visited[startVertex] = true;
+    enqueue(q, startVertex);
+
+    while(q->front != NULL) {
+        int currentVertex = dequeue(q);
+        num++;
+        Node* temp = graph->adjLists[currentVertex];
+        while(temp) {
+            int adjVertex = temp->vertex;
+            if(graph->visited[adjVertex] == false){
+                graph->visited[adjVertex] = true;
+                enqueue(q, adjVertex);
+            }
+            temp = temp->next;
         }
     }
-}
-
-void deleteGraph(Graph* graph) {
-    for (int i = 0; i < graph->numVertices; i++) { // deallocating memory for the adjacency matrix
-        delete[] graph->adjMatrix[i];
-    }
-    delete[] graph->adjMatrix; // delete the adjacency matrix itself
-
-    delete[] graph->visited; // delete the visited variable itself
-
-    for (int i = 0; i < graph->numVertices; i++) {
-        delete graph->stacks[i];
-    }
-    delete[] graph->stacks;
-
-    delete graph; // delete the graph itself
+    delete q;
 }
 
 int main() {
     int numVertices, edges;
+
     cin >> numVertices >> edges;
 
-    Graph* graph = createGraph(numVertices); // creating the graph
+    Graph* graph = createGraph(numVertices);
 
     for(int i = 0; i < edges; i++) {
         int vertex1, vertex2;
         cin >> vertex1 >> vertex2;
-
         addEdge(graph, vertex1 - 1, vertex2 - 1);
     }
-
+    
     for(int j = 0; j < numVertices; j++) {
         for(int i = 0; i < numVertices; i++) {
             graph->visited[i] = false;
         }
         int num = 0;
-        DFS(graph, j, num);
-        cout << num << " ";
+        BFS(graph, j, num);
+        cout << num;
+        if(j != numVertices - 1) {
+            cout << " ";
+        }
     }
     cout << "\n";
-
-    deleteGraph(graph);
-
+    delete graph;
     return 0;
 }
