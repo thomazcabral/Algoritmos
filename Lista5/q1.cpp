@@ -2,138 +2,120 @@
 
 using namespace std;
 
-struct Node {
+struct DSU {
+    int* parent;
+    int* rank;
+    int* size;
+
+    DSU(int vertices) { //constructor
+        parent = new int[vertices];
+        rank = new int[vertices]();
+        size = new int[vertices]();
+
+        for (int i = 0; i < vertices; ++i) { //initializing the parent and size of each set
+            parent[i] = i;
+            size[i] = 1;
+        }
+    }
+
+    ~DSU() { //deallocating memory for the arrays 
+        delete[] parent;
+        delete[] rank;
+        delete[] size;
+    }
+
+    int find(int set) { //finding the parent of the set
+        if (set != parent[set])
+            parent[set] = find(parent[set]);
+        return parent[set];
+    }
+
+    void union_sets(int setA, int setB) { //union of two sets
+        setA = find(setA);
+        setB = find(setB);
+        
+        if (setA != setB) {
+            if (rank[setA] < rank[setB])
+                swap(setA, setB);
+
+            parent[setB] = setA;
+
+            size[setA] += size[setB];
+            if (rank[setA] == rank[setB])
+                rank[setA]++;
+        }
+    }
+};
+
+struct Node { //node for the adjacency list
     int vertex;
     Node* next;
 };
 
-struct Queue {
-    Node *front, *rear;
+struct AdjList {
+    Node* head;
 };
 
-Node* newNode(int v) {
-    Node* node = new Node;
-    node->vertex = v;
-    node->next = NULL;
-
-    return node;
-}
-
-Queue* createQueue() {
-    Queue* q = new Queue;
-    q->front = q->rear = NULL;
-
-    return q;
-}
-
-void enqueue(Queue* q, int v) {
-    Node* temp = newNode(v);
-
-    if (q->rear == NULL) {
-        q->front = q->rear = temp;
-        return;
-    }
-
-    q->rear->next = temp;
-    q->rear = temp;
-}
-
-int dequeue(Queue* q) {
-    if (q->front == NULL)
-        return -1;
-
-    Node* temp = q->front;
-
-    int value = temp->vertex;
-    q->front = q->front->next;
-    if (q->front == NULL)
-        q->rear = NULL;
-
-    delete temp;
-
-    return value;
-}
-
-struct Graph {
-    int numVertices;
-    Node** adjLists;
-    bool* visited;
-};
-
-Graph* createGraph(int vertices) {
-    Graph* graph = new Graph;
-    graph->numVertices = vertices;
-    graph->adjLists = new Node*[vertices];
-    graph->visited = new bool[vertices];
-
-    for(int i = 0; i < vertices; i++) {
-        graph->adjLists[i] = NULL;
-        graph->visited[i] = false;
-    }
-
-    return graph;
-}
-
-void addEdge(Graph* graph, int sourceVertex, int dest) {
+Node* createNode(int v) { //creating a new node for the adjacency list
     Node* newNode = new Node;
-    newNode->vertex = dest;
-    newNode->next = graph->adjLists[sourceVertex];
-    graph->adjLists[sourceVertex] = newNode;
-
-    newNode = new Node;
-
-    newNode->vertex = sourceVertex;
-    newNode->next = graph->adjLists[dest];
-    graph->adjLists[dest] = newNode;
-}
-
-void BFS(Graph* graph, int startVertex, int& num) {
-    Queue* q = createQueue();
-
-    graph->visited[startVertex] = true;
-    enqueue(q, startVertex);
-
-    while(q->front != NULL) {
-        int currentVertex = dequeue(q);
-        num++;
-        Node* temp = graph->adjLists[currentVertex];
-        while(temp) {
-            int adjVertex = temp->vertex;
-            if(graph->visited[adjVertex] == false){
-                graph->visited[adjVertex] = true;
-                enqueue(q, adjVertex);
-            }
-            temp = temp->next;
-        }
-    }
-    delete q;
+    newNode->vertex = v;
+    newNode->next = nullptr;
+    return newNode;
 }
 
 int main() {
     int numVertices, edges;
-
     cin >> numVertices >> edges;
 
-    Graph* graph = createGraph(numVertices);
+    DSU dsu(numVertices);
+    AdjList* adjLists = new AdjList[numVertices];
+
+    for(int i = 0; i < numVertices; i++) { //initializing the adjacency list
+        adjLists[i].head = nullptr;
+    }
 
     for(int i = 0; i < edges; i++) {
         int vertex1, vertex2;
         cin >> vertex1 >> vertex2;
-        addEdge(graph, vertex1 - 1, vertex2 - 1);
+
+        vertex1--;
+        vertex2--;
+
+        Node* newNode = createNode(vertex2); //adding the edge to the adjacency list
+        newNode->next = adjLists[vertex1].head; 
+        adjLists[vertex1].head = newNode;
+
+        newNode = createNode(vertex1); //the same but to the other vertex
+        newNode->next = adjLists[vertex2].head;
+        adjLists[vertex2].head = newNode;
+
+        dsu.union_sets(vertex1, vertex2);
     }
-    
-    for(int j = 0; j < numVertices; j++) {
-        for(int i = 0; i < numVertices; i++) {
-            graph->visited[i] = false;
-        }
-        int num = 0;
-        BFS(graph, j, num);
-        cout << num;
+
+    int* reachable = new int[numVertices];
+    for (int i = 0; i < numVertices; ++i) { //finding the size of the set of each vertex
+        int root = dsu.find(i);
+        reachable[i] = dsu.size[root];
+    }
+
+    for(int j = 0; j < numVertices; j++) { //printing the size of the set of each vertex
+        cout << reachable[j];
         if(j != numVertices - 1) {
             cout << " ";
         }
     }
     cout << "\n";
-    delete graph;
+
+    delete[] reachable; //deallocating memory for the arrays 
+    for(int i = 0; i < numVertices; i++) { //deallocating memory for the adjacency list
+        Node* node = adjLists[i].head;
+        while (node) {
+            Node* temp = node;
+            node = node->next;
+            delete temp;
+        }
+    }
+    delete[] adjLists;
+
     return 0;
 }
