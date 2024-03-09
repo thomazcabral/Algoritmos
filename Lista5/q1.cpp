@@ -12,7 +12,7 @@ struct DSU {
         rank = new int[vertices]();
         size = new int[vertices]();
 
-        for (int i = 0; i < vertices; ++i) { //initializing the parent and size of each set
+        for (int i = 0; i < vertices; i++) { //initializing the parent and size of each set
             parent[i] = i;
             size[i] = 1;
         }
@@ -47,75 +47,63 @@ struct DSU {
     }
 };
 
-struct Node { //node for the adjacency list
-    int vertex;
-    Node* next;
-};
+void get_horizontal_wall_separation(int wall, int N, int &square1, int &square2) {
+    int row = wall / (N - 1);
+    int col = wall % (N - 1);
+    square1 = row * N + col;
+    square2 = row * N + col + 1;
+}
 
-struct AdjList {
-    Node* head;
-};
+void get_vertical_wall_separation(int wall, int N, int &square1, int &square2) {
+    int row = wall / N;
+    int col = wall % N;
+    square1 = row * N + col;
+    square2 = (row + 1) * N + col;
+}
 
-Node* createNode(int v) { //creating a new node for the adjacency list
-    Node* newNode = new Node;
-    newNode->vertex = v;
-    newNode->next = nullptr;
-    return newNode;
+bool is_horizontal_wall(int wall, int N, int &num) {
+    if(wall <= (N - 2)) {
+        return true;
+    } else if((N - 1) <= wall && wall <= (2 * N - 2)) {
+        return false;
+    } else {
+        num += 1;
+        return is_horizontal_wall(wall - (2 * N - 1), N, num);
+    }
 }
 
 int main() {
-    int numVertices, edges;
-    cin >> numVertices >> edges;
+    int mazes;
+    cin >> mazes;
+    for(int i = 0; i < mazes; i++) {
+        int N, wallsRemoved, tests;
+        cin >> N >> wallsRemoved >> tests;
+        DSU dsu(N * N);
+        for(int j = 0; j < wallsRemoved; j++) {
+            int wall;
+            cin >> wall;
 
-    DSU dsu(numVertices);
-    AdjList* adjLists = new AdjList[numVertices];
+            int square1, square2 = 0;
+            int num = 0;
 
-    for(int i = 0; i < numVertices; i++) { //initializing the adjacency list
-        adjLists[i].head = nullptr;
-    }
-
-    for(int i = 0; i < edges; i++) {
-        int vertex1, vertex2;
-        cin >> vertex1 >> vertex2;
-
-        vertex1--;
-        vertex2--;
-
-        Node* newNode = createNode(vertex2); //adding the edge to the adjacency list
-        newNode->next = adjLists[vertex1].head; 
-        adjLists[vertex1].head = newNode;
-
-        newNode = createNode(vertex1); //the same but to the other vertex
-        newNode->next = adjLists[vertex2].head;
-        adjLists[vertex2].head = newNode;
-
-        dsu.union_sets(vertex1, vertex2);
-    }
-
-    int* reachable = new int[numVertices];
-    for (int i = 0; i < numVertices; ++i) { //finding the size of the set of each vertex
-        int root = dsu.find(i);
-        reachable[i] = dsu.size[root];
-    }
-
-    for(int j = 0; j < numVertices; j++) { //printing the size of the set of each vertex
-        cout << reachable[j];
-        if(j != numVertices - 1) {
-            cout << " ";
+            if(is_horizontal_wall(wall, N, num)) {
+                get_horizontal_wall_separation(wall - (N * num), N, square1, square2);
+            } else {
+                get_vertical_wall_separation(wall - ((N - 1) * (num + 1)), N, square1, square2);
+            }
+            dsu.union_sets(square1, square2);
         }
-    }
-    cout << "\n";
-
-    delete[] reachable; //deallocating memory for the arrays 
-    for(int i = 0; i < numVertices; i++) { //deallocating memory for the adjacency list
-        Node* node = adjLists[i].head;
-        while (node) {
-            Node* temp = node;
-            node = node->next;
-            delete temp;
+        
+        for(int j = 0; j < tests; j++) {
+            int startVertex, endVertex;
+            cin >> startVertex >> endVertex;
+            if(dsu.find(startVertex) == dsu.find(endVertex)) {
+                cout << i << "." << j << " 1" << "\n";
+            } else {
+                cout << i << "." << j << " 0" << "\n";
+            }
         }
+        cout << "\n";
     }
-    delete[] adjLists;
-
     return 0;
 }
