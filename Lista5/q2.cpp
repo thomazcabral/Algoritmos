@@ -1,12 +1,14 @@
-//still very poorly implemented, but it should pass in at least one test case
-
 #include <iostream>
 
 #define INT_MAX 2147483647
 
 using namespace std;
 
-int minCost(int key[], bool mstSet[], int vertices) { //function to find the vertex with the minimum key value, from those that are notin the mstSet
+struct Edge {
+    int vertex, weight;
+};
+
+int minCost(int* key, bool* mstSet, int vertices) { //function to find the vertex with the minimum key value, from those that are notin the mstSet
     int min_value = INT_MAX, min_index;
 
     for(int i = 0; i < vertices; i++) {
@@ -18,18 +20,23 @@ int minCost(int key[], bool mstSet[], int vertices) { //function to find the ver
     return min_index;
 }
 
-void printMst(int parent[], int vertices, int** graph) {
+void printMst(int* parent, Edge** adjList, int vertices) {
     int total_cost = 0;
     for(int i = 1; i < vertices; i++) {
-        total_cost += graph[i][parent[i]];
+        for(int j = 0; j < vertices; j++) {
+            if(adjList[i][j].vertex == parent[i]) {
+                total_cost += adjList[i][j].weight;
+                break;
+            }
+        }
     }
     cout << total_cost;
 }
 
-void primMst(int vertices, int** graph) {
-    int parent[vertices]; // store the MST at the moment
-    int key[vertices]; // store the key value of the vertices
-    bool mstSet[vertices]; // true if the vertex is in the mst
+void primMst(int vertices, Edge** adjList) {
+    int* parent = new int[vertices]; // store the MST at the moment
+    int* key = new int[vertices]; // store the key value of the vertices
+    bool* mstSet = new bool[vertices]; // true if the vertex is in the mst
 
     for(int i = 0; i < vertices; i++) { // initializing the arrays
         key[i] = INT_MAX;
@@ -44,35 +51,50 @@ void primMst(int vertices, int** graph) {
         mstSet[pick] = true; // vertex in the mst
 
         for(int j = 0; j < vertices; j++) {
-            if(graph[pick][j] && !mstSet[j] && graph[pick][j] < key[j]) { //update the key value of the vertices that are not in the mst
-                parent[j] = pick;
-                key[j] = graph[pick][j];
+            if(adjList[pick][j].vertex != -1 && !mstSet[adjList[pick][j].vertex] && adjList[pick][j].weight < key[adjList[pick][j].vertex]) { //update the key value of the vertices that are not in the mst
+                parent[adjList[pick][j].vertex] = pick;
+                key[adjList[pick][j].vertex] = adjList[pick][j].weight;
             }
         }
     }
-    printMst(parent, vertices, graph);
+    printMst(parent, adjList, vertices);
+
+    delete[] parent;
+    delete[] key;
+    delete[] mstSet;
 }
 
 int main() {
     int vertices, edges;
     cin >> vertices >> edges;
 
-    int** graph = new int*[vertices];
-    for(int i = 0; i < vertices; i++) { // initializing the graph
-        graph[i] = new int[vertices];
+    Edge** adjList = new Edge*[vertices];
+    for(int i = 0; i < vertices; i++) { 
+        adjList[i] = new Edge[vertices];
         for(int j = 0; j < vertices; j++) {
-            graph[i][j] = 0;
+            adjList[i][j].vertex = -1;
+            adjList[i][j].weight = INT_MAX;
         }
     }
 
     for(int i = 0; i < edges; i++) {
         int vertex1, vertex2, weight;
         cin >> vertex1 >> vertex2 >> weight;
-        graph[vertex1][vertex2] = weight; // addEdge function
-        graph[vertex2][vertex1] = weight;
+        if(adjList[vertex1][vertex2].weight > weight) {
+            adjList[vertex1][vertex2].vertex = vertex2;
+            adjList[vertex1][vertex2].weight = weight;
+            adjList[vertex2][vertex1].vertex = vertex1;
+            adjList[vertex2][vertex1].weight = weight;
+        }
     }
 
-    primMst(vertices, graph);
+    primMst(vertices, adjList);
+
+    for(int i = 0; i < vertices; i++) {
+        delete[] adjList[i];
+    }
+    delete[] adjList;
+
     cout << "\n";
     return 0;
 }
