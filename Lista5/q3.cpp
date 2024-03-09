@@ -58,6 +58,10 @@ bool DFS(Graph* graph, int startVertex, int endVertex) {
             visited[currentVertex] = true;
             while(temp) {
                 int adjVertex = temp->vertex; 
+                if(adjVertex == endVertex) { //if the adjacent vertex is the end vertex the function stops and returns true
+                    delete[] visited;
+                    return true;
+                }
                 if(!visited[adjVertex]) {
                     push(&stack, adjVertex); //push the adjacent vertex to the stack
                 }
