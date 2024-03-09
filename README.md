@@ -27,3 +27,9 @@ This repository is organized into folders, each one focusing on specific topics 
 - DFS (Depth First Search) algorithm
 - BFS (Breadth First Search) algorithm
 - Dijkstra's algorithm
+
+### Lista5 (List 5)
+- Graphs
+- DSU (Disjoint-Set-Union)
+- Prim's algorithm
+- Dynamic Programming (DP)
