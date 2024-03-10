@@ -77,6 +77,15 @@ void dijkstra(Graph* graph, int sourceVertex) {  // it is not working properly
     }
 }
 
+void printAdjMatrix(Graph* graph) { // function just to help me debug
+    for (int i = 0; i < graph->numVertices; i++) {
+        for (int j = 0; j < graph->numVertices; j++) {
+            cout << graph->adjMatrix[i][j] << " ";
+        }
+        cout << "\n";
+    }
+}
+
 int main() {
     int blocks, streets, events;
 
